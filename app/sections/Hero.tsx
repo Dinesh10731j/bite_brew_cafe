@@ -7,109 +7,52 @@ import { gsap } from '../lib/gsap'
 import type { HeroProps, CTAButton } from '../types/hero'
 import cafe_logo from '../../public/bite_brew_logo.jpeg'
 
-export default function Hero({ title, description, ctas }: HeroProps) {
+export const CreativeHero: React.FC<HeroProps> = ({ title, description, ctas }) => {
+
   const sectionRef = useRef<HTMLElement>(null)
-  const headlineRef = useRef<HTMLHeadingElement>(null)
-  const subheadlineRef = useRef<HTMLParagraphElement>(null)
-  const ctaContainerRef = useRef<HTMLDivElement>(null)
-  const imageRef = useRef<HTMLDivElement>(null)
-  const scrollIndicatorRef = useRef<HTMLDivElement>(null)
+  const imageWrapperRef = useRef<HTMLDivElement>(null)
+  const liquidBgRef = useRef<HTMLDivElement>(null)
+  const tickerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      const tl = gsap.timeline()
+      const tl = gsap.timeline({ defaults: { ease: "expo.out" } })
 
-      // ✨ Headline animation
-      const words = headlineRef.current?.querySelectorAll('.word')
-      if (words) {
-        tl.fromTo(
-          words,
-          { opacity: 0, y: 40, rotateX: -15 },
-          {
-            opacity: 1,
-            y: 0,
-            rotateX: 0,
-            duration: 0.8,
-            stagger: 0.1,
-            ease: 'power3.out'
-          }
-        )
-      }
-
-      // ✨ Subtitle
-      tl.fromTo(
-        subheadlineRef.current,
-        { opacity: 0, y: 30, filter: 'blur(10px)' },
-        { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.8 },
-        '-=0.5'
+      // Initial Load Reveal
+      tl.fromTo(liquidBgRef.current ?? {}, 
+        { scale: 1.5, opacity: 0 }, 
+        { scale: 1, opacity: 1, duration: 2 }
+      )
+      .fromTo(".char", 
+        { y: 100, opacity: 0 }, 
+        { y: 0, opacity: 1, stagger: 0.02, duration: 1 }, 
+        "-=1.5"
+      )
+      .fromTo(imageWrapperRef.current ?? {}, 
+        { x: 100, opacity: 0, rotate: 10 }, 
+        { x: 0, opacity: 1, rotate: 0, duration: 1.5 }, 
+        "-=1"
       )
 
-      // ✨ CTA buttons
-      const buttons = ctaContainerRef.current?.querySelectorAll('a')
-      if (buttons) {
-        tl.fromTo(
-          buttons,
-          { scale: 0.8, opacity: 0 },
-          {
-            scale: 1,
-            opacity: 1,
-            duration: 0.6,
-            stagger: 0.15,
-            ease: 'back.out(1.5)'
-          },
-          '-=0.4'
-        )
-      }
-
-      // 🔥 LOGO ENTRY
-      tl.fromTo(
-        imageRef.current,
-        { opacity: 0, scale: 0.9, y: 80 },
-        { opacity: 1, scale: 1, y: 0, duration: 1, ease: 'power3.out' },
-        0
-      )
-
-      // 🔥 PIN LOGO (REAL PREMIUM EFFECT)
-      gsap.to(imageRef.current, {
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: 'top top',
-          end: '+=600',
-          scrub: true,
-          pin: imageRef.current,
-          pinSpacing: false
-        }
-      })
-
-      // 🌿 PARALLAX DEPTH
-      gsap.to(imageRef.current, {
-        yPercent: -20,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          scrub: true
-        }
-      })
-
-      // ✨ FLOATING LOOP
-      gsap.to(imageRef.current, {
+      // Floating elements
+      gsap.to(".floating-element", {
         y: -20,
+        x: 10,
         duration: 3,
-        ease: 'sine.inOut',
         repeat: -1,
-        yoyo: true
+        yoyo: true,
+        ease: "sine.inOut"
       })
 
-      // ✨ SCROLL INDICATOR
-      gsap.to(scrollIndicatorRef.current, {
-        y: 10,
-        opacity: 0.5,
-        duration: 1.5,
+      // Ticker scroll
+      gsap.to(tickerRef.current, {
+        xPercent: -50,
         repeat: -1,
-        yoyo: true
+        duration: 20,
+        ease: "none"
       })
 
-    }, sectionRef)
+    })
 
     return () => ctx.revert()
   }, [])
@@ -117,80 +60,92 @@ export default function Hero({ title, description, ctas }: HeroProps) {
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-screen flex items-center justify-center overflow-hidden"
-      style={{
-        background:
-          'linear-gradient(135deg, #f8f5f0 0%, #ede8e3 50%, #e8dfd7 100%)'
-      }}
+      className="relative min-h-screen w-full flex flex-col justify-center overflow-hidden bg-[#F5F0E6] py-20"
     >
-      {/* 🌿 Background layers */}
-      <div className="absolute inset-0 opacity-5 bg-noise" />
-      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-[#207659]/10 to-transparent rounded-full blur-3xl -mr-48 -mt-48" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-[#207659]/5 to-transparent rounded-full blur-3xl -ml-48 -mb-48" />
+      {/* Background */}
+      <div ref={liquidBgRef} className="absolute inset-0 z-0 pointer-events-none">
+        <div className="absolute top-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-[#8EC894]/20 rounded-full blur-[120px] parallax-layer" />
+        <div className="absolute bottom-[-10%] left-[-5%] w-[40vw] h-[40vw] bg-[#4B9360]/10 rounded-full blur-[100px] parallax-layer" />
+      </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center">
+      {/* Content */}
+      <div className="relative z-10 max-w-[1400px] mx-auto px-6 grid lg:grid-cols-12 gap-8 items-center">
+        <div className="lg:col-span-7 space-y-10">
+          <div className="inline-flex items-center gap-3 px-4 py-2 bg-[#000000] text-[#8EC894] rounded-full text-xs font-bold uppercase tracking-widest animate-pulse">
+            <span className="w-2 h-2 bg-[#8EC894] rounded-full" />
+            Now Brewing in the City
+          </div>
 
-        {/* TEXT */}
-        <div className="space-y-8">
-          <h1
-            ref={headlineRef}
-            className="text-5xl md:text-7xl font-serif font-bold text-[#207659]"
-          >
+          <h1 className="text-7xl md:text-[10rem] font-black text-[#000000] leading-[0.85] uppercase tracking-tighter mix-blend-multiply">
             {title.split(' ').map((word, i) => (
-              <span key={i} className="word inline-block mr-3">{word}</span>
+              <span key={i} className="block overflow-hidden">
+                <span className="char inline-block">{word}</span>
+              </span>
             ))}
           </h1>
 
-          <p ref={subheadlineRef} className="text-xl text-[#1a5a46]/80">
-            {description}
-          </p>
-
-          <div ref={ctaContainerRef} className="flex gap-4">
-            {ctas.map((cta: CTAButton, i) => (
-              <Link
-                key={i}
-                href={cta.href}
-                className={`px-8 py-4 rounded-full font-semibold shadow-lg ${
-                  i === 0
-                    ? 'bg-gradient-to-r from-[#207659] to-[#1a5a46] text-white'
-                    : 'bg-white/80 backdrop-blur text-[#207659]'
-                }`}
-              >
-                {cta.text}
-              </Link>
-            ))}
+          <div className="flex flex-col md:flex-row gap-8 items-start md:items-center">
+            <p className="text-xl text-[#4A2C2A] max-w-sm font-medium leading-tight border-l-4 border-[#4B9360] pl-6">
+              {description}
+            </p>
+            <div className="flex flex-col gap-2">
+              <span className="text-[10px] uppercase font-bold text-[#4B9360] tracking-[0.3em]">Quick Links</span>
+              <div className="flex gap-4">
+                {ctas?.map((cta, i) => (
+                  <Link
+                    key={i}
+                    href={cta.href}
+                    className={`group relative overflow-hidden px-8 py-4 font-bold uppercase text-sm transition-all duration-500 ${
+                      i === 0 ? 'bg-[#000000] text-white' : 'border-2 border-[#000000] text-[#000000]'
+                    }`}
+                  >
+                    <span className="relative z-10">{cta.text}</span>
+                    <div className="absolute inset-0 bg-[#4B9360] translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                  </Link>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* 🔥 LOGO SECTION */}
-        <div ref={imageRef} className="relative flex items-center justify-center">
+        <div className="lg:col-span-5 relative">
+          <div ref={imageWrapperRef} className="relative flex justify-center items-center">
+            <div className="absolute inset-0 flex items-center justify-center animate-[spin_15s_linear_infinite]">
+              <svg viewBox="0 0 100 100" className="w-full h-full opacity-10">
+                <path id="circlePath" d="M 50, 50 m -40, 0 a 40,40 0 1,1 80,0 a 40,40 0 1,1 -80,0" fill="transparent" />
+                <text className="text-[8px] font-bold uppercase fill-[#000000]">
+                  <textPath xlinkHref="#circlePath">Best Coffee • Fresh Bites • Bold Vibes</textPath>
+                </text>
+              </svg>
+            </div>
 
-          {/* Glow */}
-          <div className="absolute w-80 h-80 bg-[#207659]/20 blur-3xl rounded-full" />
+            <div className="relative z-10 w-80 h-80 md:w-[500px] md:h-[500px] p-4 bg-white/30 backdrop-blur-3xl rounded-[4rem] border border-white/50 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] flex items-center justify-center overflow-hidden rotate-3 hover:rotate-0 transition-transform duration-700">
+              <Image
+                src={cafe_logo}
+                alt="Bite & Brew"
+                className="w-[90%] h-[90%] object-cover rounded-[3rem] shadow-2xl"
+                priority
+              />
+            </div>
 
-          {/* Glass circle */}
-          <div className="relative w-64 h-64 rounded-full bg-white/20 backdrop-blur-xl border border-white/30 shadow-2xl flex items-center justify-center">
-
-            <Image
-              src={cafe_logo}
-              alt="Bite & Brew Logo"
-              className="rounded-full object-cover"
-              width={220}
-              height={220}
-              priority
-            />
-
+            <div className="absolute -top-10 -left-10 w-32 h-32 bg-[#4B9360] rounded-full mix-blend-screen blur-3xl opacity-40 floating-element" />
+            <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-[#4A2C2A] rounded-full mix-blend-multiply blur-3xl opacity-20 floating-element" />
           </div>
-
         </div>
       </div>
 
-      {/* Scroll indicator */}
-      <div
-        ref={scrollIndicatorRef}
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 text-[#207659]/60"
-      >
-        Scroll ↓
+      <div className="absolute bottom-0 w-full bg-[#000000] py-6 overflow-hidden rotate-[-2deg] translate-y-10">
+        <div ref={tickerRef} className="flex whitespace-nowrap gap-20">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="flex gap-20 items-center">
+              <span className="text-4xl font-black text-[#8EC894] uppercase tracking-tighter italic">Energy in Every Sip</span>
+              <span className="text-4xl font-black text-transparent" style={{ WebkitTextStroke: '1px #8EC894' }}>•</span>
+              <span className="text-4xl font-black text-[#F5F0E6] uppercase tracking-tighter">Bite Harder</span>
+              <span className="text-4xl font-black text-[#8EC894] uppercase tracking-tighter italic">Brew Deeper</span>
+              <span className="text-4xl font-black text-transparent" style={{ WebkitTextStroke: '1px #8EC894' }}>•</span>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   )
