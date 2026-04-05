@@ -60,7 +60,7 @@ export const CreativeHero: React.FC<HeroProps> = ({ title, description, ctas }) 
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-screen w-full flex flex-col justify-center overflow-hidden bg-[#F5F0E6] py-20"
+      className="relative min-h-screen w-full flex flex-col justify-center overflow-hidden bg-[#F5F0E6] py-20 "
     >
       {/* Background */}
       <div ref={liquidBgRef} className="absolute inset-0 z-0 pointer-events-none">
@@ -69,7 +69,7 @@ export const CreativeHero: React.FC<HeroProps> = ({ title, description, ctas }) 
       </div>
 
       {/* Content */}
-      <div className="relative z-10 max-w-[1400px] mx-auto px-6 grid lg:grid-cols-12 gap-8 items-center">
+      <div className="relative z-10 max-w-[1400px] mx-auto px-6 grid lg:grid-cols-12 gap-8 items-center mt-10">
         <div className="lg:col-span-7 space-y-10">
           <div className="inline-flex items-center gap-3 px-4 py-2 bg-[#000000] text-[#8EC894] rounded-full text-xs font-bold uppercase tracking-widest animate-pulse">
             <span className="w-2 h-2 bg-[#8EC894] rounded-full" />

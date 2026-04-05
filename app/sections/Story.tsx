@@ -12,12 +12,7 @@ import type { StoryProps, TimelineItem } from '../types/story'
 
 
 export const sampleTimeline: TimelineItem[] = [
-  {
-    id: '1',
-    year: '2005',
-    title: 'Bean to Bold',
-    description: 'Born in a tiny garage roastery with nothing but passion, premium beans, and a dream to brew something different. First brew sold at local market.',
-  },
+  
   {
     id: '2',
     year: '2012',
@@ -44,7 +39,7 @@ export const sampleTimeline: TimelineItem[] = [
   }
 ]
 
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 export const StorySection: React.FC<StoryProps> = React.memo(({
   title = 'Bold Beginnings',
@@ -63,6 +58,7 @@ export const StorySection: React.FC<StoryProps> = React.memo(({
   const [activeIndex, setActiveIndex] = useState(0)
   const timelineCardRefs = useRef<HTMLDivElement[]>([])
   const timelineCount = Math.min(timeline.length, 5)
+  const ctaRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -81,6 +77,30 @@ export const StorySection: React.FC<StoryProps> = React.memo(({
           }
         })
       }
+
+
+gsap.timeline({
+  scrollTrigger: {
+    trigger: ctaRef.current,
+    start: 'top center',
+    end: '+=500',
+    pin: ctaRef.current,
+    scrub: true,
+    anticipatePin: 1
+  }
+})
+.fromTo(
+  ctaRef.current,
+  { scale: 0.8, opacity: 0, y: 50 },
+  { scale: 1, opacity: 1, y: 0, duration: 1, ease: 'power3.out' }
+)
+.fromTo(
+  ctaRef.current,
+  { y: 30, opacity: 0 },
+  { y: 0, opacity: 1, stagger: 0.2, duration: 0.6 },
+  '-=0.5'
+)
+      
 
       // Timeline hero entrance
       gsap.timeline({
@@ -287,7 +307,7 @@ className="preview-timeline-card cursor-pointer group relative p-8 rounded-2xl b
         {/* Bottom CTA Card */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2" />
-          <div className="story-cta-card flex flex-col items-center justify-center p-12 rounded-[3rem] bg-gradient-to-r from-[#4B9360] to-[#8EC894] text-white text-center gap-6 shadow-2xl">
+          <div  ref={ctaRef} className="story-cta-card flex flex-col items-center justify-center p-12 rounded-[3rem] bg-gradient-to-r from-[#4B9360] to-[#8EC894] text-white text-center gap-6 shadow-2xl">
             <div className="w-24 h-24 bg-white/20 backdrop-blur-xl rounded-3xl flex items-center justify-center mb-4">
               <Globe size={40} className="text-[#000000]" />
             </div>
