@@ -74,9 +74,7 @@ body {
   100% { opacity: 0; transform: translateY(-50px) scale(1.2); }
 }
 
-.hero-pin {
-  will-change: transform;
-}
+
 
 .parallax-layer {
   will-change: transform;
