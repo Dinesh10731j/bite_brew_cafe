@@ -1,21 +1,21 @@
-'use client'
+'use client';
 
-import { useEffect, useRef } from 'react'
-import Link from 'next/link'
-import Image from 'next/image'
-import { gsap } from '../lib/gsap'
-import type { HeroProps } from '../types/hero'
-import cafe_logo from '../../public/bite_brew_logo.jpeg'
+import { useEffect, useRef } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { gsap } from '../lib/gsap';
+import type { HeroProps } from '../types/hero';
+import cafe_logo from '../../public/bite_brew_logo.jpeg';
 
 export const CreativeHero: React.FC<HeroProps> = ({ title, description, ctas }) => {
-  const sectionRef = useRef<HTMLElement>(null)
-  const imageWrapperRef = useRef<HTMLDivElement>(null)
-  const liquidBgRef = useRef<HTMLDivElement>(null)
-  const tickerRef = useRef<HTMLDivElement>(null)
+  const sectionRef = useRef<HTMLElement>(null);
+  const imageWrapperRef = useRef<HTMLDivElement>(null);
+  const liquidBgRef = useRef<HTMLDivElement>(null);
+  const tickerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      const tl = gsap.timeline({ defaults: { ease: "expo.out" } })
+      const tl = gsap.timeline({ defaults: { ease: "expo.out" } });
 
       // 1. Initial Load Reveal
       tl.fromTo(liquidBgRef.current ?? {}, 
@@ -31,20 +31,29 @@ export const CreativeHero: React.FC<HeroProps> = ({ title, description, ctas }) 
         { x: 100, opacity: 0, rotate: 10 }, 
         { x: 0, opacity: 1, rotate: 0, duration: 1.5 }, 
         "-=1"
-      )
+      );
 
-      // 2. Ticker scroll
+      // 2. Floating elements (Bubbles)
+      gsap.to(".floating-element", {
+        y: -20,
+        x: 10,
+        duration: 3,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut"
+      });
+
+      // 3. Ticker scroll
       gsap.to(tickerRef.current, {
         xPercent: -50,
         repeat: -1,
         duration: 20,
         ease: "none"
-      })
+      });
 
-      // 3. MOUSE INTERACTION LOGIC
+      // 4. MOUSE INTERACTIVE TITLE LOGIC
       const handleMouseMove = (e: MouseEvent) => {
-        // Target BOTH the .char (from strings) and .menu-char-interactive (from JSX)
-        const chars = document.querySelectorAll(".char, .menu-char-interactive");
+        const chars = document.querySelectorAll(".char");
         
         chars.forEach((char) => {
           const rect = char.getBoundingClientRect();
@@ -55,9 +64,10 @@ export const CreativeHero: React.FC<HeroProps> = ({ title, description, ctas }) 
           const distY = e.clientY - charY;
           const distance = Math.sqrt(distX * distX + distY * distY);
 
+          // If mouse is within 150px of the character
           if (distance < 150) {
             gsap.to(char, {
-              x: distX * 0.4,
+              x: distX * 0.4, // Move character away from mouse
               y: distY * 0.4,
               scale: 1.3,
               rotate: distX * 0.1,
@@ -65,6 +75,7 @@ export const CreativeHero: React.FC<HeroProps> = ({ title, description, ctas }) 
               ease: "power2.out"
             });
           } else {
+            // Return to original position
             gsap.to(char, {
               x: 0,
               y: 0,
@@ -80,17 +91,17 @@ export const CreativeHero: React.FC<HeroProps> = ({ title, description, ctas }) 
       window.addEventListener("mousemove", handleMouseMove);
       return () => window.removeEventListener("mousemove", handleMouseMove);
 
-    }, sectionRef) // Scoped to this section
+    }, sectionRef);
 
-    return () => ctx.revert()
-  }, [])
+    return () => ctx.revert();
+  }, []);
 
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-screen w-full flex flex-col justify-center overflow-hidden bg-[#F5F0E6] py-20 "
+      className="relative min-h-screen w-full flex flex-col justify-center overflow-hidden bg-[#F5F0E6] py-20"
     >
-      {/* Background elements */}
+      {/* Background */}
       <div ref={liquidBgRef} className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute top-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-[#8EC894]/20 rounded-full blur-[120px]" />
         <div className="absolute bottom-[-10%] left-[-5%] w-[40vw] h-[40vw] bg-[#4B9360]/10 rounded-full blur-[100px]" />
@@ -103,23 +114,25 @@ export const CreativeHero: React.FC<HeroProps> = ({ title, description, ctas }) 
             Now Brewing in the City
           </div>
 
-          <h1 className="text-7xl md:text-[10rem] font-black text-[#000000] leading-[0.85] uppercase tracking-tighter mix-blend-multiply cursor-default">
-            {typeof title === 'string' ? (
-              <span className="flex flex-wrap">
-                {title.split(' ').map((word, i) => (
-                  <span key={i} className="flex mr-[0.2em]">
-                    {word.split('').map((letter, j) => (
-                      <span key={j} className="char inline-block will-change-transform">
-                        {letter}
-                      </span>
-                    ))}
-                  </span>
-                ))}
-              </span>
-            ) : (
-              title
-            )}
-          </h1>
+          {/* Interactive Title: Split into words then letters */}
+         <h1 className="text-7xl md:text-[10rem] font-black text-[#000000] leading-[0.85] uppercase tracking-tighter mix-blend-multiply cursor-default">
+
+  {typeof title === "string" ? (
+    title.split(' ').map((word, i) => (
+      <span key={i} className="inline-flex mr-[0.2em] whitespace-nowrap">
+        {word.split('').map((letter, j) => (
+          <span key={j} className="char inline-block will-change-transform">
+            {letter}
+          </span>
+        ))}
+      </span>
+    ))
+  ) : (
+    // If title is NOT string → render directly
+    title
+  )}
+
+</h1>
 
           <div className="flex flex-col md:flex-row gap-8 items-start md:items-center">
             <p className="text-xl text-[#4A2C2A] max-w-sm font-medium leading-tight border-l-4 border-[#4B9360] pl-6">
@@ -145,13 +158,23 @@ export const CreativeHero: React.FC<HeroProps> = ({ title, description, ctas }) 
           </div>
         </div>
 
-        {/* Image Section */}
         <div className="lg:col-span-5 relative">
           <div ref={imageWrapperRef} className="relative flex justify-center items-center">
-             {/* ... SVG and Image content remains exactly same as your code ... */}
-             <div className="relative z-10 w-80 h-80 md:w-[500px] md:h-[500px] p-4 bg-white/30 backdrop-blur-3xl rounded-[4rem] border border-white/50 shadow-2xl flex items-center justify-center overflow-hidden rotate-3 hover:rotate-0 transition-transform duration-700">
+            <div className="absolute inset-0 flex items-center justify-center animate-[spin_15s_linear_infinite]">
+              <svg viewBox="0 0 100 100" className="w-full h-full opacity-10">
+                <path id="circlePath" d="M 50, 50 m -40, 0 a 40,40 0 1,1 80,0 a 40,40 0 1,1 -80,0" fill="transparent" />
+                <text className="text-[8px] font-bold uppercase fill-[#000000]">
+                  <textPath xlinkHref="#circlePath">Best Coffee • Fresh Bites • Bold Vibes</textPath>
+                </text>
+              </svg>
+            </div>
+
+            <div className="relative z-10 w-80 h-80 md:w-[500px] md:h-[500px] p-4 bg-white/30 backdrop-blur-3xl rounded-[4rem] border border-white/50 shadow-2xl flex items-center justify-center overflow-hidden rotate-3 hover:rotate-0 transition-transform duration-700">
               <Image src={cafe_logo} alt="Bite & Brew" className="w-[90%] h-[90%] object-cover rounded-[3rem]" priority />
             </div>
+
+            <div className="absolute -top-10 -left-10 w-32 h-32 bg-[#4B9360] rounded-full mix-blend-screen blur-3xl opacity-40 floating-element" />
+            <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-[#4A2C2A] rounded-full mix-blend-multiply blur-3xl opacity-20 floating-element" />
           </div>
         </div>
       </div>
@@ -161,12 +184,12 @@ export const CreativeHero: React.FC<HeroProps> = ({ title, description, ctas }) 
         <div ref={tickerRef} className="flex whitespace-nowrap gap-20">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="flex gap-20 items-center">
-              <span className="text-4xl font-black text-[#8EC894] uppercase italic">Energy in Every Sip</span>
-              <span className="text-4xl font-black text-[#F5F0E6] uppercase">Bite Harder</span>
+              <span className="text-4xl font-black text-[#8EC894] uppercase tracking-tighter italic">Energy in Every Sip</span>
+              <span className="text-4xl font-black text-[#F5F0E6] uppercase tracking-tighter">Bite Harder</span>
             </div>
           ))}
         </div>
       </div>
     </section>
-  )
-}
+  );
+};
