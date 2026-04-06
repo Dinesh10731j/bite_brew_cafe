@@ -1,117 +1,114 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
-import { gsap } from '@/app/lib/gsap'
+import { useRef, useEffect } from 'react'
+import { gsap } from './lib/gsap'
 
 export default function Loading() {
-  const containerRef = useRef<HTMLDivElement>(null!)
-  const spinnerRef = useRef<SVGCircleElement>(null!)
-  const textRef = useRef<HTMLParagraphElement>(null!)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const coreRef = useRef<HTMLDivElement>(null)
+  const orbitRef = useRef<SVGSVGElement>(null)
+  const textRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    // Create GSAP timeline for entrance and loop
-    const tl = gsap.timeline()
+    // gsap.context handles cleanup automatically when ctx.revert() is called
+    let ctx = gsap.context(() => {
+      const tl = gsap.timeline()
 
-    // Entrance animation: fade + scale up
-    tl.fromTo(containerRef.current, 
-      { opacity: 0, scale: 0.8 }, 
-      { opacity: 1, scale: 1, duration: 0.6, ease: 'power2.out' }
-    )
+      // 1. Core Pulsing Animation
+      gsap.to(coreRef.current, {
+        scale: 1.2,
+        opacity: 0.8,
+        duration: 1,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut"
+      })
 
-    // Stagger text letters (optional premium touch)
-    gsap.fromTo(textRef.current!.children, 
-      { y: 20, opacity: 0 }, 
-      { y: 0, opacity: 1, duration: 0.4, stagger: 0.05, ease: 'expo.out' }
-    )
+      // 2. Orbits Rotation
+      gsap.to(".orbit-line", {
+        rotation: 360,
+        duration: 8,
+        repeat: -1,
+        ease: "none",
+        transformOrigin: "center",
+        stagger: {
+          each: 1,
+          from: "random"
+        }
+      })
 
-    // Infinite spinner rotation + pulse
-    const spinLoop = gsap.to(spinnerRef.current, {
-      rotation: 360,
-      duration: 2,
-      ease: 'none',
-      repeat: -1
-    })
+      // 3. Text Stagger Entrance
+      if (textRef.current) {
+        gsap.fromTo(textRef.current.children, 
+          { y: 20, opacity: 0 }, 
+          { y: 0, opacity: 1, duration: 0.8, stagger: 0.05, ease: "power4.out" }
+        )
+      }
+    }, containerRef)
 
-    const pulse = gsap.to(spinnerRef.current, {
-      scale: 1.1,
-      duration: 1.5,
-      ease: 'power2.inOut',
-      repeat: -1,
-      yoyo: true
-    })
-
-    // Cleanup (Next.js handles exit)
-    return () => {
-      tl.kill()
-      spinLoop.kill()
-      pulse.kill()
-    }
+    return () => ctx.revert() // Important: Cleans up all animations
   }, [])
 
   return (
     <div 
       ref={containerRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100 dark:from-slate-900/95 dark:to-slate-900/90 backdrop-blur-sm bg-noise"
+      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-50 dark:bg-[#0a0a0a]"
     >
-      <div className="flex flex-col items-center space-y-6 p-8 max-w-sm mx-auto">
-        {/* Animated Spinner - Morphing coffee bean/circle */}
-        <div className="relative">
-          <svg 
-            className="w-20 h-20 md:w-24 md:h-24"
-            viewBox="0 0 100 100"
-            fill="none"
-          >
-            <circle
-              ref={spinnerRef}
-              cx="50"
-              cy="50"
-              r="20"
-              stroke="#207659"
-              strokeWidth="6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="transform-gpu"
-            />
-            {/* Inner pulse ring */}
-            <circle
-              cx="50"
-              cy="50"
-              r="28"
-              pathLength={1}
-              className="stroke-[#D2B48C]/30 stroke-[3px]"
-              strokeDasharray="0 1"
-            >
-              <animate
-                attributeName="stroke-dasharray"
-                values="0 1; 1 1"
-                dur="1.5s"
-                repeatCount="indefinite"
-                calcMode="spline"
-                keySplines="0.5 0 0.5 1; 0.5 0 0.5 1"
-                keyTimes="0; 0.5; 1"
-              />
-            </circle>
-          </svg>
-          <div className="absolute inset-0 w-20 h-20 md:w-24 md:h-24 animate-ping rounded-2xl bg-[#207659]/10" />
-        </div>
+      <div className="relative flex items-center justify-center w-64 h-64">
+        
+        {/* Orbiting Rings */}
+        <svg ref={orbitRef} className="absolute w-full h-full" viewBox="0 0 100 100">
+          <circle 
+            className="orbit-line stroke-slate-200 dark:stroke-slate-800" 
+            cx="50" cy="50" r="30" fill="none" strokeWidth="0.5" strokeDasharray="4 8" 
+          />
+          <circle 
+            className="orbit-line stroke-[#207659]/40" 
+            cx="50" cy="50" r="40" fill="none" strokeWidth="1" strokeDasharray="10 5" 
+          />
+          <circle 
+            className="orbit-line stroke-slate-300 dark:stroke-slate-700" 
+            cx="50" cy="50" r="20" fill="none" strokeWidth="0.5" 
+          />
+          
+          {/* Orbiting Electron Dots */}
+          <circle cx="80" cy="50" r="2" fill="#207659" className="orbit-line" />
+          <circle cx="20" cy="50" r="1.5" fill="#10b981" className="orbit-line" />
+        </svg>
 
-        {/* Brewing text with letter stagger */}
-        <p 
-          ref={textRef}
-          className="text-2xl md:text-3xl font-bold text-[#1a5a46] tracking-tight text-center leading-tight"
-          style={{ fontFamily: 'var(--font-geist-mono)' }}
+        {/* Central Core */}
+        <div 
+          ref={coreRef}
+          className="relative w-12 h-12 bg-[#207659] rounded-full shadow-[0_0_30px_rgba(32,118,89,0.6)] flex items-center justify-center"
         >
-          {Array.from('Brewing your experience...').map((char, i) => (
-            <span key={i} className="inline-block">
-              {char === ' ' ? '\u00A0' : char}
-            </span>
-          ))}
-        </p>
-
-        <div className="h-2 w-24 bg-gradient-to-r from-[#207659]/20 to-transparent rounded-full overflow-hidden">
-          <div className="h-full w-1/3 bg-[#207659] animate-pulse rounded-full" />
+          <div className="w-4 h-4 bg-white rounded-full animate-ping opacity-75" />
         </div>
       </div>
+
+      {/* Modern Text Reveal */}
+      <div 
+        ref={textRef}
+        className="mt-8 flex space-x-1 font-mono text-sm tracking-[0.3em] text-slate-500 dark:text-slate-400 uppercase"
+      >
+        {"Initializing".split("").map((char, i) => (
+          <span key={i} className="inline-block">{char}</span>
+        ))}
+      </div>
+
+      {/* Bottom Scanning Line */}
+      <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#207659] to-transparent opacity-20 overflow-hidden">
+        <div className="w-full h-full bg-[#207659] animate-scan" />
+      </div>
+
+      <style jsx>{`
+        @keyframes scan {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        .animate-scan {
+          animation: scan 3s linear infinite;
+        }
+      `}</style>
     </div>
   )
 }

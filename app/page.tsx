@@ -75,13 +75,7 @@ export default function Home() {
               quote: 'Clean ingredients, bold flavors. Fuel for champions who train hard and sip harder.',
               rating: 5
             },
-            {
-              id: '4',
-              name: 'Sofia Patel',
-              role: 'Graphic Designer',
-              quote: 'The ambiance, the aroma, the art on the plate. Pure inspiration.',
-              rating: 5
-            }
+           
           ]}
         />
       </ErrorBoundary>

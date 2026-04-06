@@ -1,50 +1,24 @@
 'use client'
 
-// Removed duplicate import - use React import below
-
+import React, { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { gsap } from '../lib/gsap'
 import { useMouseTilt } from '../components/useMouseTilt'
 import { ScrollTrigger } from 'gsap/dist/ScrollTrigger'
-import { MapPin, Award, Globe, Zap, ArrowUpRight, Coffee } from 'lucide-react'
+import { Coffee, Zap, ArrowUpRight, History } from 'lucide-react'
 import type { StoryProps, TimelineItem } from '../types/story'
 
-
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger)
+}
 
 export const sampleTimeline: TimelineItem[] = [
-  {
-    id: '1',
-    year: '2005',
-    title: 'Bean to Bold',
-    description: 'Born in a tiny garage roastery with nothing but passion, premium beans, and a dream to brew something different. First brew sold at local market.',
-  },
-  {
-    id: '2',
-    year: '2012',
-    title: 'Urban Expansion',
-    description: 'Conquered the city skyline with 5 flagship locations. Where concrete meets coffee culture, transforming neighborhoods one pour at a time.',
-  },
-  {
-    id: '3',
-    year: '2018',
-    title: 'Award Circuit',
-    description: 'Roasted our way to 27 major awards. From World Barista Championship to Best Bite in Brew. Taste verified by the world.',
-  },
-  {
-    id: '4',
-    year: '2023',
-    title: 'Global Brew',
-    description: 'Launched international pop-ups and online empire across 12 countries. Bite & Brew knows no borders – now shipping bold brews worldwide.',
-  },
-  {
-    id: '5',
-    year: '2025',
-    title: 'Next Chapter',
-    description: 'Franchise revolution begins. 100 locations planned. Bringing the boldest brews and fiercest bites to every corner of the earth.',
-  }
+  { id: '1', year: '2005', title: 'The Garage Roastery', description: 'Started with a single modified espresso machine and a dream to disrupt the bitter coffee status quo.' },
+  { id: '2', year: '2012', title: 'Urban Expansion', description: 'Conquered the city skyline with 5 flagship locations. Where concrete meets coffee culture.' },
+  { id: '3', year: '2018', title: 'Award Circuit', description: 'Roasted our way to 27 major awards. From World Barista Championship to Best Bite in Brew.' },
+  { id: '4', year: '2023', title: 'Global Brew', description: 'Launched international pop-ups across 12 countries. Bite & Brew knows no borders.' },
+  { id: '5', year: '2025', title: 'Next Chapter', description: 'Franchise revolution begins. Bringing the boldest brews to every corner of the earth.' }
 ]
-
-import React, { useCallback, useEffect, useRef, useState } from 'react'
 
 export const StorySection: React.FC<StoryProps> = React.memo(({
   title = 'Bold Beginnings',
@@ -53,280 +27,186 @@ export const StorySection: React.FC<StoryProps> = React.memo(({
   primaryCTA = { href: '#menu', text: 'Our Menu Now' },
   secondaryCTA = { href: '#contact', text: 'Join the Revolution' }
 }) => {
-
-
   const sectionRef = useRef<HTMLElement>(null)
+  const pinContainerRef = useRef<HTMLDivElement>(null)
   const timelineHeroRef = useRef<HTMLDivElement>(null)
-  // previewRefs unused, consolidated to timelineCardRefs
   const tickerRef = useRef<HTMLDivElement>(null)
-  const pinTriggerRef = useRef<ScrollTrigger>(null)
+  const ctaCardRef = useRef<HTMLDivElement>(null) // Dedicated ref for bottom CTA
+  
   const [activeIndex, setActiveIndex] = useState(0)
-  const timelineCardRefs = useRef<HTMLDivElement[]>([])
-  const timelineCount = Math.min(timeline.length, 5)
+  const scrollTriggerRef = useRef<ScrollTrigger | null>(null)
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Title char stagger reveal
-      const titleChars = sectionRef.current?.querySelectorAll('.story-char')
-      if (titleChars) {
-        gsap.from(titleChars, {
-          y: 50,
-          opacity: 0,
-          stagger: 0.02,
-          duration: 0.8,
-          ease: "back.out(1.7)",
-          scrollTrigger: {
-            trigger: ".story-header",
-            start: "top 85%",
-          }
-        })
-      }
+      // 1. Header Reveal
+      gsap.from(".story-char", {
+        y: 50, opacity: 0, stagger: 0.02, duration: 0.8, ease: "back.out(1.7)",
+        scrollTrigger: { trigger: ".story-header", start: "top 85%" }
+      })
 
-      // Timeline hero entrance
-      gsap.timeline({
-        scrollTrigger: {
-          trigger: timelineHeroRef.current ?? document.body,
-          start: "top 80%",
-        }
-      }).fromTo(timelineHeroRef.current ?? document.body, 
-        { scale: 0.85, opacity: 0, y: 80 },
-        { scale: 1, opacity: 1, y: 0, duration: 1.4, ease: "expo.out" }
-      )
-
-      // Fixed pinning - shorter duration, no scrub/state conflicts
-      const pinTrigger = ScrollTrigger.create({
-        trigger: timelineHeroRef.current ?? document.body,
-        start: "top top",
-        end: "+=100vh",
-        pin: timelineHeroRef.current ?? document.body,
+      // 2. PINNING
+      scrollTriggerRef.current = ScrollTrigger.create({
+        trigger: pinContainerRef.current,
+        start: "top 10%",
+        end: `+=${timeline.length * 600}px`,
+        pin: true,
         pinSpacing: true,
-        anticipatePin: 1,
-        invalidateOnRefresh: true,
-        refreshPriority: -1,
-      })
-      pinTriggerRef.current = pinTrigger
-
-      // Enhanced scrub timeline: sync activeIndex, morph content, animate right timeline
-      const contentTimeline = gsap.timeline({
-        scrollTrigger: {
-          trigger: timelineHeroRef.current ?? document.body,
-          start: "top top",
-          end: "+=100vh",
-          scrub: 0.8,
-          onUpdate: (self) => {
-            const progress = self.progress;
-            const newIndex = Math.floor(progress * (timeline.length - 1));
-            if (newIndex !== activeIndex) {
-              setActiveIndex(newIndex);
-            }
-            // Hero morphs
-            gsap.to('.timeline-hero-content h3', {
-              scale: 1 + progress * 0.1,
-              duration: 0.3
-            });
-            gsap.to('.timeline-hero-content > p', {
-              opacity: progress > 0.1 ? 1 : 0.3,
-              y: progress * -10,
-              duration: 0.3
-            });
-            // Right timeline cards animation
-      timelineCardRefs.current.forEach((card, i) => {
-        const cardProgress = Math.abs(i / (timeline.length - 1) - progress);
-        gsap.to(card ?? {}, {
-          scale: 1 - cardProgress * 0.2,
-          opacity: 0.6 + 0.4 * (1 - cardProgress),
-          boxShadow: cardProgress < 0.3 ? '0 20px 40px rgba(142,200,148,0.4)' : '0 10px 20px rgba(0,0,0,0.1)',
-          duration: 0.4
-        });
-        // Preview tilt moved to component level if needed
-      });
-          }
-        }
-      }).to(".timeline-hero-content", {
-        scale: 1.05,
-        y: -20,
-        ease: "none"
-      }, 0)
-
-
-              // Right timeline cards enhanced entrance + hover prep
-      gsap.from(".preview-timeline-card", {
-        y: 60,
-        opacity: 0,
-        scale: 0.9,
-        duration: 0.8,
-        stagger: 0.15,
-        ease: "expo.out",
-        scrollTrigger: {
-          trigger: ".preview-timeline-grid",
-          start: "top 85%"
+        scrub: 0.5,
+        onUpdate: (self) => {
+          const progress = self.progress;
+          const index = Math.min(
+            Math.floor(progress * timeline.length),
+            timeline.length - 1
+          );
+          setActiveIndex(index);
         }
       })
 
-      // Infinite ticker
+      // 3. Infinite Ticker
       gsap.to(tickerRef.current, {
-        xPercent: -50,
-        repeat: -1,
-        duration: 40,
-        ease: "none"
+        xPercent: -50, repeat: -1, duration: 40, ease: "none"
       })
-
-      // Background shapes parallax
-      gsap.to(".story-bg-shape", {
-        y: -100,
-        rotation: 45,
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          scrub: true
-        }
-      })
-
-    })
+    }, sectionRef)
     
     return () => ctx.revert()
-  }, [timeline, timelineCount])
+  }, [timeline.length])
 
+  // CONTENT SYNC ANIMATION
+  useEffect(() => {
+    gsap.fromTo(".hero-content-inner-text", 
+      { opacity: 0, x: -20 },
+      { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" }
+    )
+  }, [activeIndex])
+
+  const scrollToTimelineIndex = (index: number) => {
+    if (scrollTriggerRef.current) {
+      const st = scrollTriggerRef.current;
+      const targetScroll = st.start + (st.end - st.start) * (index / (timeline.length - 1));
+      window.scrollTo({ top: targetScroll, behavior: 'smooth' });
+    }
+  }
+
+  // Apply Mouse Tilt to both key cards
   useMouseTilt({ ref: timelineHeroRef })
-
-
-  const activeTimelineItem = timeline[activeIndex] || timeline[0]
+  useMouseTilt({ ref: ctaCardRef })
 
   return (
-    <section
-      ref={sectionRef}
-      className="relative min-h-screen py-32 px-6 bg-[#F5F0E6] overflow-hidden"
-    >
-      {/* Background Decor */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="story-bg-shape absolute top-[10%] right-[-5%] w-[40vw] h-[40vw] bg-[#8EC894]/10 rounded-full blur-[120px]" />
-        <div className="story-bg-shape absolute bottom-[5%] left-[-10%] w-[35vw] h-[35vw] bg-[#4B9360]/10 rounded-[100px] blur-[100px]" />
-        <div className="story-bg-shape absolute top-1/2 left-1/2 w-[25vw] h-[25vw] bg-[#000000]/5 rounded-full blur-[80px]" />
-      </div>
-
+    <section ref={sectionRef} className="relative min-h-screen py-32 px-6 bg-[#F5F0E6] overflow-hidden">
       <div className="relative z-10 max-w-7xl mx-auto">
+        
         {/* Header Section */}
         <div className="story-header mb-20 space-y-6">
           <div className="inline-flex items-center gap-3 px-5 py-2 bg-[#000000] text-[#8EC894] rounded-full text-xs font-bold uppercase tracking-[0.3em]">
-            <MapPin size={14} className="fill-[#8EC894]" />
-            Our Journey
+            <History size={14} className="fill-[#8EC894]" /> Our Journey
           </div>
-          
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
             <h2 className="text-6xl md:text-8xl font-black text-[#000000] uppercase tracking-tighter leading-[0.85]">
               {title.split(' ').map((word, i) => (
-                <span key={i} className="inline-block mr-2">
-                  {word.split('').map((char, j) => (
-                    <span key={j} className="story-char inline-block">
-                      {char === ' ' ? '\u00A0' : char}
-                    </span>
-                  ))}
+                <span key={i} className="inline-block mr-4">
+                  {word.split('').map((char, j) => <span key={j} className="story-char inline-block">{char}</span>)}
                 </span>
               ))}
             </h2>
-            <p className="text-xl text-[#4A2C2A] max-w-md font-medium leading-relaxed border-l-4 border-[#4B9360] pl-6">
+            <p className="text-xl text-[#4A2C2A]/80 max-w-md font-medium leading-relaxed border-l-4 border-[#4B9360] pl-6">
               {subtitle}
             </p>
           </div>
         </div>
 
-        {/* Pinned Timeline Hero + Previews */}
-        <div className="story-container relative grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-          {/* Pinned Timeline Hero */}
-          <div ref={timelineHeroRef} className="story-timeline-hero lg:col-span-2 group relative h-[600px] p-12 rounded-[3rem] overflow-hidden bg-gradient-to-br from-[#000000] to-[#1A1A1A] text-white shadow-[0_60px_100px_rgba(0,0,0,0.5)] perspective-[1000px] will-change-transform">
-            <div className="timeline-hero-content relative z-20 h-full flex flex-col justify-between">
-              <div className="absolute top-12 right-12 w-16 h-16 bg-[#8EC894]/20 rounded-2xl flex items-center justify-center backdrop-blur-xl shadow-2xl">
-                <div className="w-8 h-8 bg-[#8EC894] rounded-xl flex items-center justify-center font-black text-sm">
-                  {timeline[0]?.year || '2005'}
+        {/* PINNED CONTAINER */}
+        <div ref={pinContainerRef} className="relative grid grid-cols-1 lg:grid-cols-12 gap-12 items-center min-h-[650px]">
+          
+          {/* LEFT: Dynamic Hero Card (with Mouse Tilt) */}
+          <div ref={timelineHeroRef} className="lg:col-span-7 h-[600px] rounded-[3.5rem] bg-[#000000] p-12 md:p-16 text-white relative overflow-hidden shadow-3xl border border-white/5 will-change-transform">
+             <div className="absolute top-0 right-0 p-12 opacity-10">
+                <Coffee size={300} strokeWidth={1} />
+             </div>
+
+             <div className="hero-content-inner relative z-10 h-full flex flex-col justify-between">
+                <div className="hero-content-inner-text">
+                  <div className="w-20 h-20 bg-[#8EC894] rounded-3xl flex items-center justify-center text-black font-black text-2xl mb-10 shadow-[0_0_40px_rgba(142,200,148,0.3)]">
+                    {timeline[activeIndex].year}
+                  </div>
+                  <h3 className="text-4xl md:text-6xl font-black uppercase tracking-tight leading-none mb-6">
+                    {timeline[activeIndex].title}
+                  </h3>
+                  <p className="text-xl text-white/70 leading-relaxed max-w-lg">
+                    {timeline[activeIndex].description}
+                  </p>
                 </div>
-              </div>
-              <div className="relative z-30 pt-16">
-                <h3 className="font-black tracking-tight text-4xl md:text-5xl mb-8 uppercase leading-tight">
-                  {timeline[activeIndex]?.title || timeline[0]?.title}
-                </h3>
-                <p className="text-xl opacity-95 leading-relaxed max-w-2xl text-white/95 drop-shadow-md">
-                  {timeline[activeIndex]?.description || timeline[0]?.description}
-                </p>
-              </div>
-              <div className="flex items-center justify-between pt-12 border-t border-white/10">
-                <span className="text-6xl font-black opacity-80">{timeline[activeIndex]?.year || timeline[0]?.year}</span>
-                <div className="flex items-center gap-4 text-[#8EC894] font-bold uppercase tracking-wider text-sm">
-                  <Zap size={20} />
-                  Milestone Achieved
+
+                {/* Progress Bar */}
+                <div className="flex items-center gap-6">
+                  <div className="h-[2px] flex-1 bg-white/10 relative overflow-hidden">
+                    <div 
+                      className="absolute left-0 top-0 h-full bg-[#8EC894] transition-all duration-300" 
+                      style={{ width: `${((activeIndex + 1) / timeline.length) * 100}%` }}
+                    />
+                  </div>
+                  <span className="font-mono text-sm tracking-widest text-[#8EC894]">
+                    0{activeIndex + 1} / 0{timeline.length}
+                  </span>
                 </div>
-              </div>
-            </div>
+             </div>
           </div>
 
-          {/* Timeline Preview Cards */}
-          <div className="preview-timeline-grid flex lg:flex-col gap-6">
-            {timeline.slice(1, timelineCount).map((item, i) => (
+          {/* RIGHT: SelectedIndex Indicator Cards */}
+          <div className="lg:col-span-5 space-y-4">
+            {timeline.map((item, i) => (
               <div 
                 key={item.id}
-ref={(el) => { if (el) timelineCardRefs.current[i] = el; }}
-
-className="preview-timeline-card cursor-pointer group relative p-8 rounded-2xl bg-white/70 backdrop-blur-xl border border-white/30 hover:bg-white hover:shadow-3xl hover:scale-[1.05] transition-all duration-500 shadow-xl hover:shadow-2xl h-56 flex flex-col justify-between relative before:absolute before:left-6 before:top-0 before:w-px before:h-full before:bg-gradient-to-b before:from-[#8EC894]/50 before:to-[#4B9360]/30 before:rounded-full z-0"
-                onClick={() => {
-                  const targetProgress = (i + 1) / timeline.length;
-                  pinTriggerRef.current?.scroll(targetProgress);
-                }}
+                onClick={() => scrollToTimelineIndex(i)}
+                className={`group cursor-pointer relative p-8 rounded-[2rem] transition-all duration-500 border-2 ${
+                  activeIndex === i 
+                    ? "bg-white border-[#8EC894] shadow-2xl translate-x-4 scale-100 opacity-100" 
+                    : "bg-white/40 border-transparent grayscale opacity-40 scale-95 hover:opacity-70"
+                }`}
               >
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 bg-[#000000]/10 backdrop-blur rounded-xl flex items-center justify-center">
-                    <span className="text-lg font-black text-[#000000]">{item.year}</span>
-                  </div>
-                  <div className="font-bold text-xl line-clamp-1">{item.title}</div>
+                <div className="flex items-center justify-between mb-2">
+                   <span className={`font-black text-xl ${activeIndex === i ? "text-[#000000]" : "text-gray-400"}`}>
+                    {item.year}
+                   </span>
+                   {activeIndex === i && <Zap size={18} className="text-[#8EC894] fill-[#8EC894]" />}
                 </div>
-                <p className="text-sm opacity-70 leading-relaxed line-clamp-3 group-hover:line-clamp-none">
-                  {item.description}
-                </p>
+                <h4 className={`font-bold text-lg ${activeIndex === i ? "text-[#000000]" : "text-gray-500"}`}>
+                  {item.title}
+                </h4>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Bottom CTA Card */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2" />
-          <div className="story-cta-card flex flex-col items-center justify-center p-12 rounded-[3rem] bg-gradient-to-r from-[#4B9360] to-[#8EC894] text-white text-center gap-6 shadow-2xl">
-            <div className="w-24 h-24 bg-white/20 backdrop-blur-xl rounded-3xl flex items-center justify-center mb-4">
-              <Globe size={40} className="text-[#000000]" />
-            </div>
-            <h3 className="text-3xl font-black uppercase">Ready For the Next Brew?</h3>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link 
-                href={primaryCTA.href}
-                className="flex items-center gap-3 px-8 py-4 bg-[#000000] text-[#8EC894] rounded-2xl font-black uppercase text-sm hover:scale-105 transition-all shadow-lg hover:shadow-xl"
-              >
-                {primaryCTA.text}
-                <ArrowUpRight size={18} />
-              </Link>
-              {secondaryCTA && (
-                <Link 
-                  href={secondaryCTA.href}
-                  className="flex items-center gap-2 px-8 py-4 border-2 border-white/20 backdrop-blur-xl text-white font-bold uppercase text-sm rounded-2xl hover:bg-white hover:text-[#4B9360] transition-all"
-                >
-                  {secondaryCTA.text}
-                  <Coffee size={18} />
-                </Link>
-              )}
-            </div>
+        {/* BOTTOM CTA Section (with Mouse Tilt) */}
+        <div 
+          ref={ctaCardRef} 
+          className="mt-32 p-12 md:p-20 rounded-[4rem] bg-[#000000] text-white flex flex-col md:flex-row items-center justify-between gap-10 shadow-3xl relative overflow-hidden will-change-transform"
+        >
+          <div className="relative z-10 text-center md:text-left">
+            <h3 className="text-4xl md:text-5xl font-black uppercase mb-4">
+              The Next Chapter<br/>
+              <span className="text-[#8EC894]">Starts With You</span>
+            </h3>
+          </div>
+          <div className="relative z-10 flex flex-col sm:flex-row gap-4">
+            <Link href={primaryCTA.href} className="px-10 py-5 bg-[#8EC894] text-black font-black uppercase text-sm rounded-2xl flex items-center gap-3 hover:scale-105 transition-transform">
+              {primaryCTA.text} <ArrowUpRight size={20} />
+            </Link>
           </div>
         </div>
       </div>
 
-      {/* Giant Marquee Ticker */}
-      <div className="absolute bottom-10 left-0 w-full overflow-hidden pointer-events-none opacity-[0.04]">
+      {/* Marquee Background */}
+      <div className="absolute bottom-10 left-0 w-full overflow-hidden pointer-events-none opacity-[0.03]">
         <div ref={tickerRef} className="flex gap-20 whitespace-nowrap py-8">
-          {[...Array(6)].map((_, i) => (
+          {[...Array(4)].map((_, i) => (
             <div key={i} className="flex gap-20 items-center">
-              <span className="text-[12rem] md:text-[15rem] font-black uppercase tracking-tighter text-[#000000]">FROM BEAN</span>
-              <Coffee size={100} strokeWidth={6} className="text-[#4B9360]" />
-              <span className="text-[12rem] md:text-[15rem] font-black uppercase tracking-tighter italic">TO BOLD</span>
-              <span className="text-[12rem] md:text-[15rem] font-black uppercase tracking-tighter text-transparent stroke-[#000000] stroke-3" 
-                    style={{ WebkitTextStroke: '3px #000000' }}>•</span>
+              <span className="text-[15rem] font-black uppercase tracking-tighter text-[#000000]">BITE & BREW</span>
+              <span className="text-[15rem] font-black uppercase tracking-tighter text-transparent" style={{ WebkitTextStroke: '2px #000000' }}>HISTORY</span>
             </div>
           ))}
         </div>
       </div>
     </section>
-  )})
+  )
+})
