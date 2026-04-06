@@ -1,100 +1,185 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import cafe_logo from '../../public/bite_brew_logo.jpeg';
+import { MapPin, Phone, Mail, Clock} from 'lucide-react';
 
 const Footer = () => {
-  const currentYear = new Date().getFullYear();
+  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
+  const [hoveredSocial, setHoveredSocial] = useState<string | null>(null);
+  const [isEmailFocused, setIsEmailFocused] = useState(false);
+
+  const links = [
+    { name: 'Menu', href: '#menu' },
+    { name: 'Reserve', href: '#contact' },
+    { name: 'About', href: '#about' },
+    { name: 'Contact', href: '#contact' },
+    { name: 'Gallery', href: '#gallery' },
+    { name: 'Careers', href: '#careers' },
+  ];
+
+  const contact = [
+    { icon: MapPin, label: 'Lambagar, Kathmandu', href: '#' },
+    { icon: Phone, label: '(555) 123-4567', href: 'tel:5551234567' },
+    { icon: Mail, label: 'hello@javabitebrewing.com', href: 'mailto:hello@javabitebrewing.com' },
+    { icon: Clock, label: 'Daily 7am - 9pm', href: '#' },
+  ];
+
+  
 
   return (
-    <footer className="relative bg-[#fafaf9] pt-24 pb-12 overflow-hidden">
-      {/* Decorative Background Gradient Blur */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-linear-to-r from-transparent via-[#207659]/20 to-transparent" />
-      
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-8 mb-20">
-          
-          {/* Brand Column (Span 5) */}
-          <div className="lg:col-span-5 space-y-8">
-            <Link href="/" className="flex items-center gap-4 group">
-              <Image 
-                src={cafe_logo} 
-                alt="Bite & Brew" 
-                width={50} 
-                height={50} 
-                className="rounded-full grayscale group-hover:grayscale-0 transition-all duration-500 shadow-xl"
-              />
-              <div>
-                <h2 className="text-2xl font-black tracking-tighter text-[#1a5a46]">
-                  BITE<span className="text-[#207659]">&</span>BREW
-                </h2>
-                <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#207659]/50">
-                  The Art of Roasting
-                </p>
-              </div>
-            </Link>
-            
-            <p className="text-zinc-500 text-lg leading-relaxed max-w-md italic">
-              "Crafting moments of clarity in every cup. Join us for a unique 
-              sensory experience where nature meets the bean."
-            </p>
+    <footer className="relative bg-white text-[#0a2920]">
+      {/* Decorative top border */}
+      <div className="h-0.5 bg-linear-to-r from-transparent via-[#207659] to-transparent" />
 
-            <div className="flex gap-4">
-              <button className="px-8 py-4 rounded-full font-bold text-xs uppercase tracking-widest bg-linear-to-r from-[#207659] to-[#1a5a46] text-white shadow-lg hover:shadow-[#207659]/20 hover:-translate-y-1 transition-all duration-300">
-                Get Directions
-              </button>
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 py-16 lg:py-20">
+        {/* Main Footer Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+          {/* Brand Section */}
+          <div className="lg:col-span-1">
+            <div className="mb-6">
+              <h2 className="text-2xl lg:text-3xl font-black tracking-tight">
+                JAVA<span className="text-[#207659]">&</span>BITE
+              </h2>
+              <p className="text-[#207659] text-xs font-bold uppercase tracking-widest mt-2">
+                Premium Cafe & Roastery
+              </p>
             </div>
+            <p className="text-sm text-[#0a2920]/70 leading-relaxed mb-6">
+              Crafting exceptional coffee experiences since 2018. Every cup tells a story of quality and passion.
+            </p>
+            
+            
           </div>
 
-          {/* Quick Links (Span 3) */}
-          <div className="lg:col-span-3 space-y-6">
-            <h4 className="text-[#1a5a46] text-xs font-black uppercase tracking-[0.3em]">Explore</h4>
-            <ul className="grid grid-cols-1 gap-4">
-              {['Experience', 'Menu', 'Story', 'Gallery', 'Testimonials'].map((item) => (
-                <li key={item}>
-                  <Link 
-                    href={`#${item.toLowerCase()}`} 
-                    className="text-zinc-600 hover:text-[#207659] font-medium transition-colors flex items-center gap-2 group text-sm"
+          {/* Quick Links */}
+          <div className="lg:col-span-1">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-[#207659] mb-6">
+              Explore
+            </h3>
+            <ul className="space-y-3">
+              {links.map((link) => (
+                <li key={link.name}>
+                  <Link
+                    href={link.href}
+                    onMouseEnter={() => setHoveredLink(link.name)}
+                    onMouseLeave={() => setHoveredLink(null)}
+                    className="
+                      relative text-sm text-[#0a2920]/70 hover:text-[#207659] transition-all duration-300
+                      group inline-flex items-center gap-2
+                    "
                   >
-                    <span className="w-0 h-px bg-[#207659] group-hover:w-4 transition-all duration-300" />
-                    {item}
+                    <span className={`w-1.5 h-1.5 rounded-full bg-[#207659] transition-all duration-300 ${
+                      hoveredLink === link.name ? 'opacity-100 scale-100' : 'opacity-0 scale-0'
+                    }`} />
+                    {link.name}
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Contact & Hours (Span 4) */}
-          <div className="lg:col-span-4 space-y-8 bg-white/60 backdrop-blur-sm p-8 rounded-3xl border border-[#207659]/5 shadow-sm">
-            <div className="space-y-2">
-              <h4 className="text-[#1a5a46] text-xs font-black uppercase tracking-[0.3em]">Hours</h4>
-              <p className="text-[#207659] font-bold text-sm">Mon — Sun: 07:00 AM - 09:00 PM</p>
-            </div>
-            
-            <div className="space-y-2">
-              <h4 className="text-[#1a5a46] text-xs font-black uppercase tracking-[0.3em]">Contact</h4>
-              <p className="text-zinc-600 text-sm font-medium">Kathmandu, Nepal</p>
-              <p className="text-zinc-400 text-sm">hello@bitebrew.cafe</p>
-            </div>
+          {/* Contact Info */}
+          <div className="lg:col-span-1">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-[#207659] mb-6">
+              Visit Us
+            </h3>
+            <ul className="space-y-4">
+              {contact.map(({ icon: Icon, label, href }, idx) => (
+                <li key={idx}>
+                  <Link
+                    href={href}
+                    onMouseEnter={() => setHoveredLink(`contact-${idx}`)}
+                    onMouseLeave={() => setHoveredLink(null)}
+                    className="group flex items-start gap-3 transition-all duration-300"
+                  >
+                    <div className={`
+                      w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all duration-300
+                      ${hoveredLink === `contact-${idx}`
+                        ? 'bg-[#207659] text-white scale-110'
+                        : 'bg-[#207659]/10 text-[#207659]'
+                      }
+                    `}>
+                      <Icon className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="text-sm text-[#0a2920]/70 group-hover:text-[#207659] transition-colors duration-300 mt-0.5">
+                      {label}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-            <div className="flex items-center gap-6 pt-4 border-t border-[#207659]/5">
-               {['Instagram', 'Facebook', 'Twitter'].map(social => (
-                 <span key={social} className="text-[10px] font-black uppercase tracking-widest text-[#207659] hover:opacity-50 cursor-pointer transition-opacity">
-                   {social}
-                 </span>
-               ))}
+          {/* Newsletter Signup */}
+          <div className="lg:col-span-1">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-[#207659] mb-6">
+              Stay Updated
+            </h3>
+            <p className="text-sm text-[#0a2920]/70 mb-4">
+              Get exclusive offers and new menu launches.
+            </p>
+            <div className={`
+              relative flex items-center rounded-lg transition-all duration-300 overflow-hidden
+              ${isEmailFocused
+                ? 'border border-[#207659] bg-[#207659]/5 shadow-md shadow-[#207659]/20'
+                : 'border border-[#207659]/20 bg-white hover:border-[#207659]/40'
+              }
+            `}>
+              <Mail className={`
+                w-4 h-4 ml-3 transition-all duration-300
+                ${isEmailFocused ? 'text-[#207659]' : 'text-[#0a2920]/40'}
+              `} />
+              <input
+                type="email"
+                placeholder="your@email.com"
+                onFocus={() => setIsEmailFocused(true)}
+                onBlur={() => setIsEmailFocused(false)}
+                className="
+                  flex-1 px-3 py-3 bg-transparent outline-none text-sm
+                  placeholder-[#0a2920]/30 text-[#0a2920]
+                "
+              />
+              <button className={`
+                px-3 py-3 transition-all duration-300
+                ${isEmailFocused
+                  ? 'text-[#207659]'
+                  : 'text-[#0a2920]/50 hover:text-[#207659]'
+                }
+              `}>
+                →
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="pt-8 border-t border-zinc-200 flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
-          <p>© {currentYear} Bite & Brew Cafe — All Rights Reserved</p>
-          <div className="flex items-center gap-8">
-             <Link href="/privacy" className="hover:text-[#207659]">Privacy</Link>
-             <Link href="/terms" className="hover:text-[#207659]">Terms</Link>
-             <span className="text-[#207659]">Handcrafted by Bite & Brew Cafe </span>
+        {/* Divider */}
+        <div className="h-px bg-[#207659]/20 mb-8" />
+
+        {/* Footer Bottom */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 text-xs text-[#0a2920]/60">
+          <span>© 2024 Java Brew & Bite. All rights reserved.</span>
+          <div className="flex gap-6">
+            <Link
+              href="#"
+              onMouseEnter={() => setHoveredLink('privacy')}
+              onMouseLeave={() => setHoveredLink(null)}
+              className={`transition-colors duration-300 ${
+                hoveredLink === 'privacy' ? 'text-[#207659]' : 'hover:text-[#207659]'
+              }`}
+            >
+              Privacy Policy
+            </Link>
+            <Link
+              href="#"
+              onMouseEnter={() => setHoveredLink('terms')}
+              onMouseLeave={() => setHoveredLink(null)}
+              className={`transition-colors duration-300 ${
+                hoveredLink === 'terms' ? 'text-[#207659]' : 'hover:text-[#207659]'
+              }`}
+            >
+              Terms of Service
+            </Link>
           </div>
         </div>
       </div>
