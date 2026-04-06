@@ -40,13 +40,11 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #8B4513;
+  background: #8EC894;
   border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #654321;
-}
+
 
 /* Premium animation keyframes for global UX */
 @keyframes float {

@@ -11,7 +11,7 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       <Hero 
-        title="Bite & Brew"
+        title="Bite AND Brew"
         tagline="Where every sip tells a story"
         description="Premium café experience blending taste, ambiance, and culture"
         ctas={[

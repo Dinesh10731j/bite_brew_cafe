@@ -1,185 +1,161 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { MapPin, Phone, Mail, Clock} from 'lucide-react';
+import { MapPin, Clock, ArrowRight, ChevronUp } from 'lucide-react';
+import { gsap } from '../lib/gsap';
+
+// --- Brand Icons ---
+const InstagramIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+  </svg>
+);
+
+const FacebookIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+  </svg>
+);
+
+const TwitterXIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+    <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932 6.064-6.932zm-1.292 19.482h2.039L6.486 3.24H4.298l13.311 17.395z" />
+  </svg>
+);
 
 const Footer = () => {
-  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
-  const [hoveredSocial, setHoveredSocial] = useState<string | null>(null);
+  const footerRef = useRef<HTMLElement>(null);
+  const brandRef = useRef<HTMLDivElement>(null);
   const [isEmailFocused, setIsEmailFocused] = useState(false);
 
-  const links = [
-    { name: 'Menu', href: '#menu' },
-    { name: 'Reserve', href: '#contact' },
-    { name: 'About', href: '#about' },
-    { name: 'Contact', href: '#contact' },
-    { name: 'Gallery', href: '#gallery' },
-    { name: 'Careers', href: '#careers' },
-  ];
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      // Magnetic Effect
+      const brand = brandRef.current;
+      if (brand) {
+        const handleMouseMove = (e: MouseEvent) => {
+          const rect = brand.getBoundingClientRect();
+          const x = e.clientX - (rect.left + rect.width / 2);
+          const y = e.clientY - (rect.top + rect.height / 2);
+          gsap.to(brand, { x: x * 0.1, y: y * 0.1, duration: 0.4 });
+        };
+        const handleMouseLeave = () => {
+          gsap.to(brand, { x: 0, y: 0, duration: 0.7, ease: "elastic.out(1, 0.3)" });
+        };
+        brand.addEventListener("mousemove", handleMouseMove);
+        brand.addEventListener("mouseleave", handleMouseLeave);
+      }
 
-  const contact = [
-    { icon: MapPin, label: 'Lambagar, Kathmandu', href: '#' },
-    { icon: Phone, label: '(555) 123-4567', href: 'tel:5551234567' },
-    { icon: Mail, label: 'hello@javabitebrewing.com', href: 'mailto:hello@javabitebrewing.com' },
-    { icon: Clock, label: 'Daily 7am - 9pm', href: '#' },
-  ];
+      gsap.from(".footer-stagger", {
+        scrollTrigger: { trigger: footerRef.current, start: "top 90%" },
+        y: 30, opacity: 0, stagger: 0.1, duration: 0.8, ease: "power2.out"
+      });
+    }, footerRef);
+    return () => ctx.revert();
+  }, []);
 
-  
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
   return (
-    <footer className="relative bg-white text-[#0a2920]">
-      {/* Decorative top border */}
-      <div className="h-0.5 bg-linear-to-r from-transparent via-[#207659] to-transparent" />
-
-      <div className="max-w-7xl mx-auto px-6 lg:px-12 py-16 lg:py-20">
-        {/* Main Footer Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-          {/* Brand Section */}
-          <div className="lg:col-span-1">
-            <div className="mb-6">
-              <h2 className="text-2xl lg:text-3xl font-black tracking-tight">
-                JAVA<span className="text-[#207659]">&</span>BITE
+    <footer ref={footerRef} className="relative bg-[#F5F0E6] text-[#0a2920] pt-24 pb-12 overflow-hidden border-t border-black/5">
+      
+      <div className="max-w-7xl mx-auto px-6 relative z-10">
+        
+        {/* TOP SECTION: Branding & Info */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 pb-20">
+          
+          <div className="lg:col-span-5 footer-stagger">
+            <div ref={brandRef} className="inline-block cursor-pointer mb-6 group">
+              <h2 className="text-5xl font-black tracking-tighter italic leading-none">
+                BITE AND <span className="text-[#207659]">.</span>BREW
               </h2>
-              <p className="text-[#207659] text-xs font-bold uppercase tracking-widest mt-2">
-                Premium Cafe & Roastery
-              </p>
             </div>
-            <p className="text-sm text-[#0a2920]/70 leading-relaxed mb-6">
-              Crafting exceptional coffee experiences since 2018. Every cup tells a story of quality and passion.
+            <p className="text-lg text-[#0a2920]/70 leading-relaxed max-w-sm mb-8 font-medium">
+              Elevating the everyday coffee ritual through artisan craft and a high-octane community.
             </p>
-            
-            
-          </div>
-
-          {/* Quick Links */}
-          <div className="lg:col-span-1">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-[#207659] mb-6">
-              Explore
-            </h3>
-            <ul className="space-y-3">
-              {links.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    href={link.href}
-                    onMouseEnter={() => setHoveredLink(link.name)}
-                    onMouseLeave={() => setHoveredLink(null)}
-                    className="
-                      relative text-sm text-[#0a2920]/70 hover:text-[#207659] transition-all duration-300
-                      group inline-flex items-center gap-2
-                    "
-                  >
-                    <span className={`w-1.5 h-1.5 rounded-full bg-[#207659] transition-all duration-300 ${
-                      hoveredLink === link.name ? 'opacity-100 scale-100' : 'opacity-0 scale-0'
-                    }`} />
-                    {link.name}
-                  </Link>
-                </li>
+            <div className="flex gap-4">
+              {[<InstagramIcon key="i" />, <FacebookIcon key="f" />, <TwitterXIcon key="t" />].map((icon, idx) => (
+                <button key={idx} className="w-10 h-10 rounded-full border border-black/10 flex items-center justify-center hover:bg-[#207659] hover:text-white hover:border-[#207659] transition-all duration-300">
+                  {icon}
+                </button>
               ))}
-            </ul>
+            </div>
           </div>
 
-          {/* Contact Info */}
-          <div className="lg:col-span-1">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-[#207659] mb-6">
-              Visit Us
-            </h3>
+          <div className="lg:col-span-3 footer-stagger">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-[#207659] mb-8">Quick Links</h3>
             <ul className="space-y-4">
-              {contact.map(({ icon: Icon, label, href }, idx) => (
-                <li key={idx}>
-                  <Link
-                    href={href}
-                    onMouseEnter={() => setHoveredLink(`contact-${idx}`)}
-                    onMouseLeave={() => setHoveredLink(null)}
-                    className="group flex items-start gap-3 transition-all duration-300"
-                  >
-                    <div className={`
-                      w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all duration-300
-                      ${hoveredLink === `contact-${idx}`
-                        ? 'bg-[#207659] text-white scale-110'
-                        : 'bg-[#207659]/10 text-[#207659]'
-                      }
-                    `}>
-                      <Icon className="w-3.5 h-3.5" />
-                    </div>
-                    <span className="text-sm text-[#0a2920]/70 group-hover:text-[#207659] transition-colors duration-300 mt-0.5">
-                      {label}
-                    </span>
+              {['Menu', 'Gallery', 'Our Story', 'Contact'].map((item) => (
+                <li key={item}>
+                  <Link href="#" className="text-lg font-bold hover:text-[#207659] transition-colors flex items-center group">
+                    <ArrowRight size={14} className="opacity-0 -ml-5 group-hover:opacity-100 group-hover:ml-0 transition-all" />
+                    {item}
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Newsletter Signup */}
-          <div className="lg:col-span-1">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-[#207659] mb-6">
-              Stay Updated
-            </h3>
-            <p className="text-sm text-[#0a2920]/70 mb-4">
-              Get exclusive offers and new menu launches.
-            </p>
-            <div className={`
-              relative flex items-center rounded-lg transition-all duration-300 overflow-hidden
-              ${isEmailFocused
-                ? 'border border-[#207659] bg-[#207659]/5 shadow-md shadow-[#207659]/20'
-                : 'border border-[#207659]/20 bg-white hover:border-[#207659]/40'
-              }
-            `}>
-              <Mail className={`
-                w-4 h-4 ml-3 transition-all duration-300
-                ${isEmailFocused ? 'text-[#207659]' : 'text-[#0a2920]/40'}
-              `} />
-              <input
-                type="email"
-                placeholder="your@email.com"
-                onFocus={() => setIsEmailFocused(true)}
-                onBlur={() => setIsEmailFocused(false)}
-                className="
-                  flex-1 px-3 py-3 bg-transparent outline-none text-sm
-                  placeholder-[#0a2920]/30 text-[#0a2920]
-                "
-              />
-              <button className={`
-                px-3 py-3 transition-all duration-300
-                ${isEmailFocused
-                  ? 'text-[#207659]'
-                  : 'text-[#0a2920]/50 hover:text-[#207659]'
-                }
-              `}>
-                →
-              </button>
+          <div className="lg:col-span-4 footer-stagger">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-[#207659] mb-8">Find Us</h3>
+            <div className="space-y-6">
+              <div className="flex gap-4">
+                <MapPin size={20} className="text-[#207659] shrink-0" />
+                <p className="font-bold text-sm">Lambagar, Kathmandu, Nepal 44600</p>
+              </div>
+              <div className="flex gap-4">
+                <Clock size={20} className="text-[#207659] shrink-0" />
+                <p className="font-bold text-sm">Daily: 07:00 — 22:00</p>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Divider */}
-        <div className="h-px bg-[#207659]/20 mb-8" />
+        {/* MIDDLE SECTION: The "Floating" Integrated Newsletter */}
+        <div className="footer-stagger py-12 border-y border-black/5 mb-12">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+            <div className="max-w-md">
+              <h4 className="text-2xl font-black tracking-tighter mb-2 italic">JOIN THE ROASTERY.</h4>
+              <p className="text-sm font-medium text-[#0a2920]/60">Get notified about limited edition beans and secret events.</p>
+            </div>
+            
+            <form className="flex-1 max-w-lg relative group">
+              <div className={`relative flex items-center transition-all duration-500 border-b-2 ${isEmailFocused ? 'border-[#207659]' : 'border-black/10'}`}>
+                <input 
+                  type="email" 
+                  placeholder="your@email.com"
+                  onFocus={() => setIsEmailFocused(true)}
+                  onBlur={() => setIsEmailFocused(false)}
+                  className="bg-transparent w-full py-4 px-2 outline-none font-black text-xl placeholder:text-black/10 uppercase tracking-tighter"
+                />
+                <button className="flex items-center gap-2 font-black uppercase tracking-widest text-[10px] group-hover:text-[#207659] transition-colors">
+                  Subscribe <ArrowRight size={16} />
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
 
-        {/* Footer Bottom */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 text-xs text-[#0a2920]/60">
-          <span>© 2024 Java Brew & Bite. All rights reserved.</span>
-          <div className="flex gap-6">
-            <Link
-              href="#"
-              onMouseEnter={() => setHoveredLink('privacy')}
-              onMouseLeave={() => setHoveredLink(null)}
-              className={`transition-colors duration-300 ${
-                hoveredLink === 'privacy' ? 'text-[#207659]' : 'hover:text-[#207659]'
-              }`}
-            >
-              Privacy Policy
-            </Link>
-            <Link
-              href="#"
-              onMouseEnter={() => setHoveredLink('terms')}
-              onMouseLeave={() => setHoveredLink(null)}
-              className={`transition-colors duration-300 ${
-                hoveredLink === 'terms' ? 'text-[#207659]' : 'hover:text-[#207659]'
-              }`}
-            >
-              Terms of Service
-            </Link>
+        {/* BOTTOM SECTION */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="flex items-center gap-6">
+            <button onClick={scrollToTop} className="group p-3 border border-black/10 rounded-full hover:bg-black hover:text-white transition-all">
+              <ChevronUp size={20} />
+            </button>
+            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-black/30">
+              © 2026 Java Brew & Bite • Design by <a href='https://codynexnepal.netlify.app/' className="hover:text-[#207659] transition-colors">CodyneX</a>
+            </p>
+          </div>
+          
+          <div className="flex gap-10">
+            {['Privacy Policy', 'Terms of Service'].map(item => (
+              <Link key={item} href="#" className="text-[10px] font-black uppercase tracking-widest hover:text-[#207659] transition-colors">
+                {item}
+              </Link>
+            ))}
           </div>
         </div>
       </div>
