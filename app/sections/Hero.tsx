@@ -8,7 +8,6 @@ import type { HeroProps, CTAButton } from '../types/hero'
 import cafe_logo from '../../public/bite_brew_logo.jpeg'
 
 export const CreativeHero: React.FC<HeroProps> = ({ title, description, ctas }) => {
-
   const sectionRef = useRef<HTMLElement>(null)
   const imageWrapperRef = useRef<HTMLDivElement>(null)
   const liquidBgRef = useRef<HTMLDivElement>(null)
@@ -52,7 +51,43 @@ export const CreativeHero: React.FC<HeroProps> = ({ title, description, ctas }) 
         ease: "none"
       })
 
-    })
+      // --- MOUSE EVENT FOR BITE & BREW ---
+      const handleMouseMove = (e: MouseEvent) => {
+        const chars = document.querySelectorAll(".char-interactive")
+        chars.forEach((char) => {
+          const rect = char.getBoundingClientRect()
+          const charX = rect.left + rect.width / 2
+          const charY = rect.top + rect.height / 2
+          
+          const distX = e.clientX - charX
+          const distY = e.clientY - charY
+          const distance = Math.sqrt(distX * distX + distY * distY)
+
+          if (distance < 150) {
+            gsap.to(char, {
+              x: distX * 0.3,
+              y: distY * 0.3,
+              scale: 1.2,
+              skewX: distX * 0.1,
+              duration: 0.4,
+              ease: "power2.out"
+            })
+          } else {
+            gsap.to(char, {
+              x: 0,
+              y: 0,
+              scale: 1,
+              skewX: 0,
+              duration: 0.6,
+              ease: "elastic.out(1, 0.3)"
+            })
+          }
+        })
+      }
+
+      window.addEventListener("mousemove", handleMouseMove)
+      return () => window.removeEventListener("mousemove", handleMouseMove)
+    }, sectionRef)
 
     return () => ctx.revert()
   }, [])
@@ -77,11 +112,24 @@ export const CreativeHero: React.FC<HeroProps> = ({ title, description, ctas }) 
           </div>
 
           <h1 className="text-7xl md:text-[10rem] font-black text-[#000000] leading-[0.85] uppercase tracking-tighter mix-blend-multiply">
-            {title.split(' ').map((word, i) => (
-              <span key={i} className="block overflow-hidden">
-                <span className="char inline-block">{word}</span>
-              </span>
-            ))}
+            {title.split(' ').map((word, i) => {
+              // Check if the word is "BITE" or "BREW" (case insensitive)
+              const isInteractive = word.toLowerCase().includes('bite') || word.toLowerCase().includes('brew');
+              
+              return (
+                <span key={i} className="block overflow-visible">
+                  {isInteractive ? (
+                    word.split('').map((char, index) => (
+                      <span key={index} className="char char-interactive inline-block will-change-transform">
+                        {char}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="char inline-block">{word}</span>
+                  )}
+                </span>
+              );
+            })}
           </h1>
 
           <div className="flex flex-col md:flex-row gap-8 items-start md:items-center">
