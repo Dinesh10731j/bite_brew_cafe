@@ -4,6 +4,8 @@ import "./globals.css";
 import SmoothScroll from "./components/SmoothScroll";
 import Navbar from "./components/Navbar";
 import Footer from "./sections/Footer";
+import Providers from "./providers";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -15,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Bite & Brew Café",
+  title: "Bite & Brew Cafe",
   description: "Experience the perfect blend of exceptional coffee and delicious bites in a warm, inviting atmosphere.",
 };
 
@@ -30,11 +32,13 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning={true}>
-        <SmoothScroll>
-          <Navbar />
-          {children}
-          <Footer/>
-        </SmoothScroll>
+        <Providers>
+          <SmoothScroll>
+            <Navbar />
+            {children}
+            <Footer />
+          </SmoothScroll>
+        </Providers>
       </body>
     </html>
   );

@@ -1,20 +1,33 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import cafe_logo from '../../public/bite_brew_logo.jpeg';
+import { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { ShoppingCart } from "lucide-react";
+import cafe_logo from "../../public/bite_brew_logo.jpeg";
+import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
+import { logout } from "@/app/store/slices/authSlice";
+import CartSidebar from "@/app/components/CartSidebar";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const cartItems = useAppSelector((state) => state.cart.items);
+  const dispatch = useAppDispatch();
+
+  const cartCount = useMemo(
+    () => cartItems.reduce((total, item) => total + item.quantity, 0),
+    [cartItems]
+  );
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
@@ -23,38 +36,42 @@ const Navbar = () => {
         setIsMobileMenuOpen(false);
       }
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const navLinks = [
-    { name: 'Home', href: '/' },
-    { name: 'Menu', href: '/menu' },
-    { name: 'Team', href: '/team' },
-    { name: 'Gallery', href: '/gallery' },
+    { name: "Home", href: "/" },
+    { name: "Menu", href: "/menu" },
+    { name: "Team", href: "/team" },
+    { name: "Gallery", href: "/gallery" },
   ];
+
+  const handleLogout = () => {
+    dispatch(logout());
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <>
       <div className="fixed top-0 w-full z-50 flex justify-center p-4 transition-all duration-500">
-        <nav 
+        <nav
           className={`
             flex items-center justify-between px-6 py-3 rounded-full transition-all duration-500
-            ${isScrolled 
-              ? 'w-full max-w-6xl bg-white/70 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_0_rgba(32,118,89,0.1)]' 
-              : 'w-full max-w-7xl bg-transparent'
+            ${isScrolled
+              ? "w-full max-w-6xl bg-white/70 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_0_rgba(32,118,89,0.1)]"
+              : "w-full max-w-7xl bg-transparent"
             }
           `}
         >
-          {/* Brand/Logo */}
           <Link href="/" className="flex items-center gap-3 group">
             <div className="relative overflow-hidden rounded-full p-0.5 bg-gradient-to-tr from-[#207659] to-[#1a5a46]">
               <div className="bg-white rounded-full p-0.5">
-                <Image 
-                  src={cafe_logo} 
-                  alt="Logo" 
-                  width={38} 
-                  height={38} 
+                <Image
+                  src={cafe_logo}
+                  alt="Logo"
+                  width={38}
+                  height={38}
                   className="rounded-full group-hover:rotate-[360deg] transition-transform duration-1000"
                 />
               </div>
@@ -69,13 +86,12 @@ const Navbar = () => {
             </div>
           </Link>
 
-          {/* Desktop Links */}
           <div className="hidden md:flex items-center gap-8">
             <div className="flex items-center gap-8 mr-4">
               {navLinks.map((link) => (
-                <Link 
-                  key={link.name} 
-                  href={link.href} 
+                <Link
+                  key={link.name}
+                  href={link.href}
                   className="relative text-xs font-bold uppercase tracking-widest text-[#1a5a46] hover:text-[#207659] transition-colors group"
                 >
                   {link.name}
@@ -84,48 +100,91 @@ const Navbar = () => {
               ))}
             </div>
 
-            {/* Contact Button */}
-            <Link 
-              href="/contact" 
-              className="px-6 py-2.5 bg-[#1a5a46] text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full hover:bg-[#207659] hover:shadow-lg transition-all duration-300 active:scale-95"
+            {isAuthenticated ? (
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="px-6 py-2.5 bg-[#1a5a46] text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full hover:bg-[#207659] hover:shadow-lg transition-all duration-300 active:scale-95"
+              >
+                Logout
+              </button>
+            ) : (
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/login"
+                  className="px-5 py-2 border border-[#1a5a46] text-[#1a5a46] text-[10px] font-black uppercase tracking-[0.2em] rounded-full hover:bg-[#1a5a46] hover:text-white transition-all duration-300"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/signup"
+                  className="px-6 py-2.5 bg-[#1a5a46] text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full hover:bg-[#207659] hover:shadow-lg transition-all duration-300"
+                >
+                  Signup
+                </Link>
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setIsCartOpen(true)}
+              className="relative w-10 h-10 rounded-full border border-[#1a5a46]/20 bg-white flex items-center justify-center text-[#1a5a46] hover:bg-[#1a5a46] hover:text-white transition-colors"
+              aria-label="Open cart"
             >
-              Contact
-            </Link>
+              <ShoppingCart size={18} />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-[#1a5a46] text-white text-[10px] font-bold flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
+            </button>
           </div>
 
-          {/* Mobile Hamburger Button */}
-          <button
-            className="md:hidden flex flex-col justify-center gap-1.5 w-10 h-10 items-center rounded-full bg-white/80 backdrop-blur-md shadow-sm z-[60]"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label="Toggle menu"
-          >
-            <span className={`block w-5 h-0.5 bg-[#1a5a46] transition-all duration-300 ${isMobileMenuOpen ? 'rotate-45 translate-y-2' : ''}`} />
-            <span className={`block w-5 h-0.5 bg-[#1a5a46] transition-all duration-300 ${isMobileMenuOpen ? 'opacity-0' : ''}`} />
-            <span className={`block w-5 h-0.5 bg-[#1a5a46] transition-all duration-300 ${isMobileMenuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
-          </button>
+          <div className="md:hidden flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsCartOpen(true)}
+              className="relative w-10 h-10 rounded-full bg-white/90 backdrop-blur-md shadow-sm flex items-center justify-center text-[#1a5a46]"
+              aria-label="Open cart"
+            >
+              <ShoppingCart size={18} />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-[#1a5a46] text-white text-[10px] font-bold flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
+            </button>
+
+            <button
+              className="flex flex-col justify-center gap-1.5 w-10 h-10 items-center rounded-full bg-white/80 backdrop-blur-md shadow-sm z-[60]"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label="Toggle menu"
+            >
+              <span className={`block w-5 h-0.5 bg-[#1a5a46] transition-all duration-300 ${isMobileMenuOpen ? "rotate-45 translate-y-2" : ""}`} />
+              <span className={`block w-5 h-0.5 bg-[#1a5a46] transition-all duration-300 ${isMobileMenuOpen ? "opacity-0" : ""}`} />
+              <span className={`block w-5 h-0.5 bg-[#1a5a46] transition-all duration-300 ${isMobileMenuOpen ? "-rotate-45 -translate-y-2" : ""}`} />
+            </button>
+          </div>
         </nav>
       </div>
 
-      {/* Mobile Menu Overlay */}
-      <div 
+      <div
         className={`
           fixed inset-0 z-[55] md:hidden transition-all duration-700 ease-in-out
-          ${isMobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
+          ${isMobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
         `}
       >
-        {/* Dark Backdrop */}
         <div className="absolute inset-0 bg-[#0a2920]/95 backdrop-blur-2xl" onClick={() => setIsMobileMenuOpen(false)} />
-        
-        {/* Menu Items */}
+
         <div className="relative h-full flex flex-col items-center justify-center gap-6">
           {navLinks.map((link, i) => (
-            <Link 
-              key={link.name} 
-              href={link.href} 
+            <Link
+              key={link.name}
+              href={link.href}
               style={{ transitionDelay: `${i * 100}ms` }}
               className={`
                 text-4xl font-black uppercase tracking-tighter text-white transition-all duration-500
-                ${isMobileMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}
+                ${isMobileMenuOpen ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}
                 hover:text-[#8EC894] hover:italic
               `}
               onClick={() => setIsMobileMenuOpen(false)}
@@ -133,26 +192,46 @@ const Navbar = () => {
               {link.name}
             </Link>
           ))}
-          
-          {/* Mobile Contact Link */}
-          <Link 
-            href="/contact"
-            style={{ transitionDelay: `${navLinks.length * 100}ms` }}
-            className={`
-               mt-4 px-10 py-4 bg-[#8EC894] text-[#0a2920] font-black uppercase tracking-widest rounded-xl transition-all duration-500
-               ${isMobileMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}
-            `}
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            Get in Touch
-          </Link>
-          
+
+          {isAuthenticated ? (
+            <button
+              type="button"
+              style={{ transitionDelay: `${navLinks.length * 100}ms` }}
+              className={`
+                mt-4 px-10 py-4 bg-[#8EC894] text-[#0a2920] font-black uppercase tracking-widest rounded-xl transition-all duration-500
+                ${isMobileMenuOpen ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}
+              `}
+              onClick={handleLogout}
+            >
+              Logout
+            </button>
+          ) : (
+            <div className="flex gap-3 mt-4">
+              <Link
+                href="/login"
+                className="px-6 py-3 border border-[#8EC894] text-[#8EC894] font-black uppercase tracking-widest rounded-xl"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Login
+              </Link>
+              <Link
+                href="/signup"
+                className="px-6 py-3 bg-[#8EC894] text-[#0a2920] font-black uppercase tracking-widest rounded-xl"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Signup
+              </Link>
+            </div>
+          )}
+
           <div className="mt-8 h-px w-12 bg-[#8EC894]/30" />
           <p className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#8EC894]/50">
             Lambagar, Nepal
           </p>
         </div>
       </div>
+
+      <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </>
   );
 };
