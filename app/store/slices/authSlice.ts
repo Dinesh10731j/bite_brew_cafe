@@ -15,24 +15,10 @@ type AuthState = {
   error: string | null;
 };
 
-const getStoredAuth = (): Pick<AuthState, "token" | "user"> => {
-  if (typeof window === "undefined") {
-    return { token: null, user: null };
-  }
-
-  const token = localStorage.getItem(AUTH_TOKEN_KEY);
-  const rawUser = localStorage.getItem(AUTH_USER_KEY);
-  const user = rawUser ? (JSON.parse(rawUser) as AuthUser) : null;
-
-  return { token, user };
-};
-
-const storedAuth = getStoredAuth();
-
 const initialState: AuthState = {
-  user: storedAuth.user,
-  token: storedAuth.token,
-  isAuthenticated: Boolean(storedAuth.token),
+  user: null,
+  token: null,
+  isAuthenticated: false,
   loading: false,
   error: null,
 };
@@ -45,23 +31,45 @@ const authSlice = createSlice({
       state.loading = true;
       state.error = null;
     },
-    loginSuccess(state, action: PayloadAction<{ user: AuthUser | null; token: string }>) {
+    loginSuccess(state, action: PayloadAction<{ user: AuthUser | null; token?: string | null }>) {
       state.loading = false;
       state.user = action.payload.user;
-      state.token = action.payload.token;
+      state.token = action.payload.token ?? null;
       state.isAuthenticated = true;
       state.error = null;
 
       if (typeof window !== "undefined") {
-        localStorage.setItem(AUTH_TOKEN_KEY, action.payload.token);
+        if (action.payload.token) {
+          localStorage.setItem(AUTH_TOKEN_KEY, action.payload.token);
+        } else {
+          localStorage.removeItem(AUTH_TOKEN_KEY);
+        }
         if (action.payload.user) {
           localStorage.setItem(AUTH_USER_KEY, JSON.stringify(action.payload.user));
+        }
+      }
+    },
+    hydrateAuth(state, action: PayloadAction<{ user: AuthUser | null; token?: string | null }>) {
+      state.user = action.payload.user;
+      state.token = action.payload.token ?? null;
+      state.isAuthenticated = Boolean(action.payload.token || action.payload.user);
+      state.error = null;
+    },
+    setCurrentUser(state, action: PayloadAction<AuthUser | null>) {
+      state.user = action.payload;
+      if (typeof window !== "undefined") {
+        if (action.payload) {
+          localStorage.setItem(AUTH_USER_KEY, JSON.stringify(action.payload));
+        } else {
+          localStorage.removeItem(AUTH_USER_KEY);
         }
       }
     },
     loginFailure(state, action: PayloadAction<string>) {
       state.loading = false;
       state.error = action.payload;
+      state.user = null;
+      state.token = null;
       state.isAuthenticated = false;
     },
     logout(state) {
@@ -79,5 +87,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { loginStart, loginSuccess, loginFailure, logout } = authSlice.actions;
+export const { loginStart, loginSuccess, hydrateAuth, setCurrentUser, loginFailure, logout } = authSlice.actions;
 export default authSlice.reducer;

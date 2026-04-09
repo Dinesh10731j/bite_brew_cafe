@@ -1,92 +1,84 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { authApi } from "@/app/features/auth/api";
-import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
-import { loginFailure, loginStart, loginSuccess, setCurrentUser } from "@/app/store/slices/authSlice";
 
-export default function SignupPage() {
-  const [name, setName] = useState("");
+export default function ResetPasswordPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
+  const [token, setToken] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [localError, setLocalError] = useState<string | null>(null);
-  const { loading, error } = useAppSelector((state) => state.auth);
-  const dispatch = useAppDispatch();
-  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    const initialEmail = searchParams.get("email") ?? "";
+    const initialToken = searchParams.get("token") ?? "";
+    if (initialEmail) {
+      setEmail(initialEmail);
+    }
+    if (initialToken) {
+      setToken(initialToken);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setLocalError(null);
+    setError(null);
+    setSuccess(null);
 
-    if (!name || !email || !password) {
-      setLocalError("Name, email, and password are required.");
+    if (!email || !token || !password || !confirmPassword) {
+      setError("All fields are required.");
       return;
     }
 
     if (!/\S+@\S+\.\S+/.test(email)) {
-      setLocalError("Please provide a valid email address.");
+      setError("Please provide a valid email address.");
       return;
     }
 
     if (password.length < 6) {
-      setLocalError("Password must be at least 6 characters.");
+      setError("Password must be at least 6 characters.");
       return;
     }
 
     if (password !== confirmPassword) {
-      setLocalError("Passwords do not match.");
+      setError("Passwords do not match.");
       return;
     }
 
-    dispatch(loginStart());
-
+    setLoading(true);
     try {
-      const result = await authApi.signup({ name, email, password });
-      let resolvedUser = result?.user ?? null;
-      try {
-        const currentUser = await authApi.getCurrentUser();
-        if (currentUser) {
-          resolvedUser = currentUser;
-        }
-      } catch {
-        // Keep signup successful even if profile fetch fails.
-      }
-      if (result) {
-        dispatch(loginSuccess({ user: resolvedUser, token: result.token }));
-      } else if (resolvedUser) {
-        dispatch(loginSuccess({ user: resolvedUser, token: null }));
-      }
-      if (resolvedUser) {
-        dispatch(setCurrentUser(resolvedUser));
-      }
-      router.push("/menu");
+      const message = await authApi.resetPassword({
+        email,
+        token,
+        password,
+        confirmPassword,
+      });
+      setSuccess(message);
+      setTimeout(() => {
+        router.push("/login");
+      }, 1200);
     } catch (submitError) {
-      dispatch(loginFailure((submitError as Error).message));
+      setError((submitError as Error).message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <main className="min-h-screen pt-32 pb-20 px-6 bg-[#f7f2ea]">
       <section className="max-w-md mx-auto bg-white rounded-3xl shadow-xl border border-black/5 p-8">
-        <h1 className="text-3xl font-black text-[#1a5a46] mb-2">Signup</h1>
-        <p className="text-sm text-black/60 mb-6">Create your Bite & Brew account.</p>
+        <h1 className="text-3xl font-black text-[#1a5a46] mb-2">Reset Password</h1>
+        <p className="text-sm text-black/60 mb-6">Set your new password using the token from your email.</p>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
-          <div>
-            <label htmlFor="name" className="block text-sm font-semibold text-black/80 mb-1">Name</label>
-            <input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              className="w-full rounded-xl border border-black/15 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#1a5a46]"
-              placeholder="Dinesh"
-            />
-          </div>
-
           <div>
             <label htmlFor="email" className="block text-sm font-semibold text-black/80 mb-1">Email</label>
             <input
@@ -100,7 +92,19 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-semibold text-black/80 mb-1">Password</label>
+            <label htmlFor="token" className="block text-sm font-semibold text-black/80 mb-1">Token</label>
+            <input
+              id="token"
+              type="text"
+              value={token}
+              onChange={(event) => setToken(event.target.value)}
+              className="w-full rounded-xl border border-black/15 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#1a5a46]"
+              placeholder="Paste token from email"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="password" className="block text-sm font-semibold text-black/80 mb-1">New Password</label>
             <input
               id="password"
               type="password"
@@ -119,27 +123,26 @@ export default function SignupPage() {
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
               className="w-full rounded-xl border border-black/15 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#1a5a46]"
-              placeholder="Repeat password"
+              placeholder="Repeat new password"
             />
           </div>
 
-          {(localError || error) && (
-            <p className="text-sm text-red-600">{localError ?? error}</p>
-          )}
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          {success && <p className="text-sm text-green-700">{success}</p>}
 
           <button
             type="submit"
             disabled={loading}
             className="w-full rounded-xl bg-[#1a5a46] text-white font-bold py-3 hover:bg-[#207659] transition-colors disabled:opacity-60"
           >
-            {loading ? "Creating account..." : "Create Account"}
+            {loading ? "Updating..." : "Reset Password"}
           </button>
         </form>
 
         <p className="mt-5 text-sm text-black/60">
-          Already have an account?{" "}
+          Back to{" "}
           <Link href="/login" className="text-[#1a5a46] font-semibold hover:underline">
-            Login
+            login
           </Link>
         </p>
       </section>

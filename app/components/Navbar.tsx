@@ -7,13 +7,14 @@ import { ShoppingCart } from "lucide-react";
 import cafe_logo from "../../public/bite_brew_logo.jpeg";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { logout } from "@/app/store/slices/authSlice";
+import { authApi } from "@/app/features/auth/api";
 import CartSidebar from "@/app/components/CartSidebar";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   const cartItems = useAppSelector((state) => state.cart.items);
   const dispatch = useAppDispatch();
 
@@ -21,6 +22,17 @@ const Navbar = () => {
     () => cartItems.reduce((total, item) => total + item.quantity, 0),
     [cartItems]
   );
+
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) {
+      return "Good morning";
+    }
+    if (hour < 18) {
+      return "Good afternoon";
+    }
+    return "Good evening";
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -47,7 +59,12 @@ const Navbar = () => {
     { name: "Gallery", href: "/gallery" },
   ];
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await authApi.logout();
+    } catch (error) {
+      console.error("Logout API failed:", error);
+    }
     dispatch(logout());
     setIsMobileMenuOpen(false);
   };
@@ -101,13 +118,18 @@ const Navbar = () => {
             </div>
 
             {isAuthenticated ? (
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="px-6 py-2.5 bg-[#1a5a46] text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full hover:bg-[#207659] hover:shadow-lg transition-all duration-300 active:scale-95"
-              >
-                Logout
-              </button>
+              <div className="flex items-center gap-3">
+                <p className="text-xs font-semibold text-[#1a5a46] whitespace-nowrap">
+                  {greeting}, {user?.name ?? "Guest"}
+                </p>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="px-6 py-2.5 bg-[#1a5a46] text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full hover:bg-[#207659] hover:shadow-lg transition-all duration-300 active:scale-95"
+                >
+                  Logout
+                </button>
+              </div>
             ) : (
               <div className="flex items-center gap-3">
                 <Link
@@ -194,17 +216,25 @@ const Navbar = () => {
           ))}
 
           {isAuthenticated ? (
-            <button
-              type="button"
-              style={{ transitionDelay: `${navLinks.length * 100}ms` }}
-              className={`
-                mt-4 px-10 py-4 bg-[#8EC894] text-[#0a2920] font-black uppercase tracking-widest rounded-xl transition-all duration-500
-                ${isMobileMenuOpen ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}
-              `}
-              onClick={handleLogout}
-            >
-              Logout
-            </button>
+            <>
+              <p
+                style={{ transitionDelay: `${navLinks.length * 100}ms` }}
+                className={`text-sm font-semibold text-[#8EC894] ${isMobileMenuOpen ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"} transition-all duration-500`}
+              >
+                {greeting}, {user?.name ?? "Guest"}
+              </p>
+              <button
+                type="button"
+                style={{ transitionDelay: `${(navLinks.length + 1) * 100}ms` }}
+                className={`
+                  mt-2 px-10 py-4 bg-[#8EC894] text-[#0a2920] font-black uppercase tracking-widest rounded-xl transition-all duration-500
+                  ${isMobileMenuOpen ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}
+                `}
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
+            </>
           ) : (
             <div className="flex gap-3 mt-4">
               <Link

@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
 import { createOrder, type CreateOrderPayload } from "@/app/features/order/api";
@@ -35,6 +35,7 @@ type CartSidebarProps = {
 export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
   const dispatch = useAppDispatch();
   const cart = useAppSelector((state) => state.cart);
+  const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   const [checkoutForm, setCheckoutForm] = useState<CheckoutFormState>(initialCheckoutForm);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [checkoutSuccess, setCheckoutSuccess] = useState<string | null>(null);
@@ -50,13 +51,29 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
       dispatch(clearCart());
       setCheckoutSuccess("Order submitted successfully.");
       setCheckoutError(null);
-      setCheckoutForm(initialCheckoutForm);
+      setCheckoutForm({
+        ...initialCheckoutForm,
+        customerName: isAuthenticated ? user?.name ?? "" : "",
+        email: isAuthenticated ? user?.email ?? "" : "",
+      });
     },
     onError: (mutationError: Error) => {
       setCheckoutSuccess(null);
       setCheckoutError(mutationError.message || "Failed to submit order.");
     },
   });
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      return;
+    }
+
+    setCheckoutForm((prev) => ({
+      ...prev,
+      customerName: prev.customerName || user?.name || "",
+      email: prev.email || user?.email || "",
+    }));
+  }, [isAuthenticated, user?.email, user?.name]);
 
   const handleCheckoutSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

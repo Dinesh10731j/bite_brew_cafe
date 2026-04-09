@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authApi } from "@/app/features/auth/api";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
-import { loginFailure, loginStart, loginSuccess } from "@/app/store/slices/authSlice";
+import { loginFailure, loginStart, loginSuccess, setCurrentUser } from "@/app/store/slices/authSlice";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -33,7 +33,19 @@ export default function LoginPage() {
 
     try {
       const result = await authApi.login({ email, password });
-      dispatch(loginSuccess({ user: result.user, token: result.token }));
+      let resolvedUser = result.user;
+      try {
+        const currentUser = await authApi.getCurrentUser();
+        if (currentUser) {
+          resolvedUser = currentUser;
+        }
+      } catch {
+        // Keep login successful even if profile fetch fails.
+      }
+      dispatch(loginSuccess({ user: resolvedUser, token: result.token }));
+      if (resolvedUser) {
+        dispatch(setCurrentUser(resolvedUser));
+      }
       router.push("/menu");
     } catch (submitError) {
       dispatch(loginFailure((submitError as Error).message));
@@ -88,6 +100,12 @@ export default function LoginPage() {
           New customer?{" "}
           <Link href="/signup" className="text-[#1a5a46] font-semibold hover:underline">
             Create account
+          </Link>
+        </p>
+        <p className="mt-2 text-sm text-black/60">
+          Forgot password?{" "}
+          <Link href="/forgot-password" className="text-[#1a5a46] font-semibold hover:underline">
+            Reset here
           </Link>
         </p>
       </section>
