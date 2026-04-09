@@ -1,206 +1,183 @@
 "use client";
 
+import { useState, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, Filter, ShoppingBag } from "lucide-react";
+import { gsap } from "../lib/gsap"; 
 import { fetchMenus } from "@/app/features/menu/api";
 import { useAppDispatch } from "@/app/store/hooks";
 import { addItem } from "@/app/store/slices/cartSlice";
+import { CreativeHero } from "../sections/Hero";
+
+
+import { MenuItemCard } from "../components/MenuCard";
 
 export default function MenuPage() {
   const dispatch = useAppDispatch();
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const [page, setPage] = useState(1);
-  const [limit] = useState(12);
   const [search, setSearch] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("all");
   const [availableOnly, setAvailableOnly] = useState(false);
 
-  useEffect(() => {
-    setPage(1);
-  }, [search, selectedCategoryId, availableOnly]);
-
-  const { data, isLoading, isError, error, isFetching } = useQuery({
-    queryKey: ["menus", page, limit, search, selectedCategoryId, availableOnly],
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["menus", page, search, selectedCategoryId, availableOnly],
     queryFn: () =>
       fetchMenus({
         page,
-        limit,
+        limit: 12,
         search: search.trim() || undefined,
         categoryId: selectedCategoryId === "all" ? undefined : selectedCategoryId,
         available: availableOnly ? true : undefined,
       }),
   });
 
+  // --- DYNAMIC CATEGORY EXTRACTION START ---
   const categoryOptions = useMemo(() => {
     const categoryMap = new Map<string, string>();
-    (data?.data ?? []).forEach((item) => {
+    // Look through current items and extract unique category pairs
+    (data?.data ?? []).forEach((item: any) => {
       if (item.category?.id && item.category?.name) {
         categoryMap.set(item.category.id, item.category.name);
       }
     });
-    return [{ id: "all", name: "All" }, ...Array.from(categoryMap.entries()).map(([id, name]) => ({ id, name }))];
+    
+    return [
+      { id: "all", name: "All Categories" }, 
+      ...Array.from(categoryMap.entries()).map(([id, name]) => ({ id, name }))
+    ];
   }, [data]);
+  // --- DYNAMIC CATEGORY EXTRACTION END ---
 
-  const totalPages = data?.pagination?.totalPages ?? 1;
-  const visiblePages = useMemo(() => {
-    const pages: number[] = [];
-    const start = Math.max(1, page - 2);
-    const end = Math.min(totalPages, start + 4);
-    for (let current = start; current <= end; current += 1) {
-      pages.push(current);
-    }
-    return pages;
-  }, [page, totalPages]);
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      const handleMouseMove = (e: MouseEvent) => {
+        const chars = document.querySelectorAll(".menu-char-interactive");
+        chars.forEach((char) => {
+          const rect = char.getBoundingClientRect();
+          const distance = Math.hypot(e.clientX - (rect.left + rect.width / 2), e.clientY - (rect.top + rect.height / 2));
+          if (distance < 150) {
+            gsap.to(char, { x: (e.clientX - (rect.left + rect.width / 2)) * 0.4, y: (e.clientY - (rect.top + rect.height / 2)) * 0.4, scale: 1.3, duration: 0.4 });
+          } else {
+            gsap.to(char, { x: 0, y: 0, scale: 1, duration: 0.6, ease: "elastic.out(1, 0.3)" });
+          }
+        });
+      };
+      window.addEventListener("mousemove", handleMouseMove);
+      return () => window.removeEventListener("mousemove", handleMouseMove);
+    }, containerRef);
+    return () => ctx.revert();
+  }, []);
 
-  const handleAddToCart = (menuItem: {
-    id: string;
-    name: string;
-    price: string;
-    image: string | null;
-  }) => {
-    dispatch(
-      addItem({
-        menuItemId: menuItem.id,
-        quantity: 1,
-        name: menuItem.name,
-        price: Number(menuItem.price),
-        image: menuItem.image,
-      })
-    );
+  const interactiveTitle = (
+    <span className="flex flex-nowrap whitespace-nowrap">
+      {"MENU".split("").map((char, i) => (
+        <span key={i} className="menu-char-interactive inline-block will-change-transform">{char}</span>
+      ))}
+    </span>
+  );
+
+  const handleAddToCart = (item: any) => {
+    dispatch(addItem({ menuItemId: item.id, quantity: 1, name: item.name, price: Number(item.price), image: item.image }));
   };
 
   return (
-    <main className="min-h-screen pt-32 pb-20 px-6 bg-[#f5f0e6]">
-      <section className="max-w-7xl mx-auto">
-        <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-4xl md:text-5xl font-black text-[#1a5a46]">Menu</h1>
-            <p className="text-black/65 mt-2">Browse menu items and add items to your cart.</p>
-          </div>
-          {isFetching && <p className="text-sm text-black/50">Refreshing menus...</p>}
-        </div>
+    <main className="bg-[#F5F0E6] min-h-screen" ref={containerRef}>
+      <CreativeHero
+        tagline="Freshly Brewed"
+        title={interactiveTitle as any}
+        description="From single-origin pours to artisanal snacks, explore our daily offerings."
+        ctas={[{ href: "#items", text: "Explore Menu" }]}
+      />
 
-        <div className="mb-6 grid md:grid-cols-3 gap-3">
-          <input
-            type="text"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search menu items"
-            className="rounded-xl border border-black/15 px-3 py-2 bg-white"
-          />
-          <select
-            value={selectedCategoryId}
-            onChange={(event) => setSelectedCategoryId(event.target.value)}
-            className="rounded-xl border border-black/15 px-3 py-2 bg-white"
-          >
-            {categoryOptions.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-          <label className="rounded-xl border border-black/15 px-3 py-2 bg-white flex items-center gap-2 text-sm font-medium text-black/70">
+      <section id="items" className="max-w-7xl mx-auto px-6 py-20">
+        <div className="flex flex-col md:flex-row gap-4 mb-12 items-center justify-between">
+          <div className="relative w-full md:w-96">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-black/30" size={18} />
             <input
-              type="checkbox"
-              checked={availableOnly}
-              onChange={(event) => setAvailableOnly(event.target.checked)}
+              type="text"
+              placeholder="What are you craving?"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1); // Reset to page 1 on search
+              }}
+              className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white border border-black/5 focus:ring-2 ring-[#207659]/20 transition-all outline-none font-medium"
             />
-            Available only
-          </label>
+          </div>
+
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <div className="flex items-center gap-2 bg-white px-4 py-4 rounded-2xl border border-black/5 flex-1 md:flex-none">
+              <Filter size={16} className="text-[#207659]" />
+              <select
+                value={selectedCategoryId}
+                onChange={(e) => {
+                  setSelectedCategoryId(e.target.value);
+                  setPage(1); // Reset to page 1 on category change
+                }}
+                className="bg-transparent outline-none font-bold text-sm uppercase tracking-tighter cursor-pointer pr-4"
+              >
+                {/* Dynamically Rendering Categories here */}
+                {categoryOptions.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <label className="flex items-center gap-3 bg-white px-6 py-4 rounded-2xl border border-black/5 cursor-pointer hover:bg-black/5 transition-colors">
+              <input 
+                type="checkbox" 
+                checked={availableOnly}
+                onChange={(e) => {
+                  setAvailableOnly(e.target.checked);
+                  setPage(1);
+                }}
+                className="w-4 h-4 accent-[#207659]" 
+              />
+              <span className="text-xs font-black uppercase tracking-widest">In Stock</span>
+            </label>
+          </div>
         </div>
 
-        {isLoading && <p className="text-lg font-semibold text-black/70">Loading menus...</p>}
-        {isError && (
-          <p className="text-red-600 font-medium">
-            {(error as Error).message || "Failed to load menus."}
-          </p>
-        )}
-
-        {!isLoading && !isError && (
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-pulse">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-96 bg-black/5 rounded-[2.5rem]" />
+            ))}
+          </div>
+        ) : (
           <>
-            <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
-              {data?.data?.map((menuItem) => (
-                <article
-                  key={menuItem.id}
-                  className="rounded-3xl border border-black/10 bg-white p-4 shadow-sm flex flex-col"
-                >
-                  <div className="relative w-full h-44 rounded-2xl overflow-hidden bg-[#efe6d9] mb-4">
-                    {menuItem.image ? (
-                      <Image
-                        src={menuItem.image}
-                        alt={menuItem.name}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 100vw, 33vw"
-                        unoptimized={menuItem.image.includes("res.cloudinary.com")}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-black/40 text-sm font-semibold">
-                        No Image
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-2 flex-1">
-                    <h2 className="text-xl font-black text-[#1a5a46]">{menuItem.name}</h2>
-                    <p className="text-xs text-black/45 uppercase tracking-wide">
-                      {menuItem.category?.name ?? "Uncategorized"}
-                    </p>
-                    <p className="text-sm text-black/60 min-h-10">{menuItem.description}</p>
-                    <p className="text-lg font-bold text-black">NPR {Number(menuItem.price).toFixed(2)}</p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => handleAddToCart(menuItem)}
-                    className="mt-4 w-full rounded-xl bg-[#1a5a46] text-white py-2.5 font-semibold hover:bg-[#207659] transition-colors"
-                  >
-                    Add to cart
-                  </button>
-                </article>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {data?.data?.map((item: any) => (
+                <MenuItemCard key={item.id} item={item} onAdd={handleAddToCart} />
               ))}
             </div>
 
             {data?.data?.length === 0 && (
-              <p className="mt-8 text-black/60">No menu items found for current filters.</p>
+              <div className="text-center py-20">
+                <p className="text-black/40 font-bold italic uppercase">No items found.</p>
+              </div>
             )}
 
-            <div className="mt-10 flex items-center justify-center gap-2">
+            <div className="mt-20 flex justify-center items-center gap-4">
               <button
-                type="button"
                 disabled={page <= 1}
-                onClick={() => setPage((current) => Math.max(1, current - 1))}
-                className="h-10 w-10 rounded-xl border border-black/15 bg-white flex items-center justify-center disabled:opacity-40"
-                aria-label="Previous page"
+                onClick={() => setPage(p => p - 1)}
+                className="p-4 rounded-2xl bg-white border border-black/5 disabled:opacity-30 hover:bg-[#0a2920] hover:text-white transition-all"
               >
-                <ChevronLeft size={18} />
+                <ChevronLeft size={20} />
               </button>
-
-              {visiblePages.map((pageNumber) => (
-                <button
-                  key={pageNumber}
-                  type="button"
-                  onClick={() => setPage(pageNumber)}
-                  className={`h-10 min-w-10 px-3 rounded-xl border text-sm font-semibold transition-colors ${
-                    pageNumber === page
-                      ? "bg-[#1a5a46] text-white border-[#1a5a46]"
-                      : "bg-white text-black border-black/15 hover:border-[#1a5a46]/40"
-                  }`}
-                >
-                  {pageNumber}
-                </button>
-              ))}
-
+              <span className="font-black italic text-2xl px-4 text-[#0a2920]">PAGE {page}</span>
               <button
-                type="button"
-                disabled={page >= totalPages}
-                onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
-                className="h-10 w-10 rounded-xl border border-black/15 bg-white flex items-center justify-center disabled:opacity-40"
-                aria-label="Next page"
+                disabled={page >= (data?.pagination?.totalPages || 1)}
+                onClick={() => setPage(p => p + 1)}
+                className="p-4 rounded-2xl bg-white border border-black/5 disabled:opacity-30 hover:bg-[#0a2920] hover:text-white transition-all"
               >
-                <ChevronRight size={18} />
+                <ChevronRight size={20} />
               </button>
             </div>
           </>
