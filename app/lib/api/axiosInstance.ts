@@ -4,7 +4,7 @@ import { logout } from "@/app/store/slices/authSlice";
 import { store } from "@/app/store/store";
 
 const resolveBaseUrl = (): string => {
-  const configured = process.env.NEXT_PUBLIC_API_BASE_URL ?? process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:7000";
+  const configured = process.env.NEXT_PUBLIC_API_BASE_URL ?? process.env.NEXT_PUBLIC_BASE_URL ?? "https://bite-brew-backend.onrender.com";
   const trimmed = configured.replace(/\/+$/, "");
   return trimmed.replace(/\/api\/v1\/bite-brew$/, "");
 };

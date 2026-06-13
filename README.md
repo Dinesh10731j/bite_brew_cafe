@@ -114,7 +114,7 @@ import CTA from './sections/CTA'
   }}
   secondaryCTA={{
     text: "Order Online",
-    href: "#order"
+    href: "/order"
   }}
   background={{
     gradient: 'linear-gradient(135deg, #F5F5DC 0%, #DEB887 50%, #D2B48C 100%)'
