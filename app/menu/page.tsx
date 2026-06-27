@@ -11,6 +11,7 @@ import { addItem } from "@/app/store/slices/cartSlice";
 import { CreativeHero } from "../sections/Hero";
 
 
+
 import { MenuItemCard } from "../components/MenuCard";
 
 export default function MenuPage() {
@@ -183,6 +184,8 @@ export default function MenuPage() {
           </>
         )}
       </section>
+
+     
     </main>
   );
 }

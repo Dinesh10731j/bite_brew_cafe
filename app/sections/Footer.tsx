@@ -60,7 +60,7 @@ const Footer = () => {
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
   return (
-    <footer ref={footerRef} className="relative bg-[#F5F0E6] text-[#0a2920] pt-24 pb-12 overflow-hidden border-t border-black/5">
+    <footer ref={footerRef} className="relative bg-white text-[#0a2920] pt-24 pb-12 overflow-hidden border-t-2 border-[#d3c7b8] shadow-[0_-20px_80px_-40px_rgba(0,0,0,0.08)]">
       
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         

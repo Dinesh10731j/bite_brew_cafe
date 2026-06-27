@@ -6,9 +6,21 @@ import Image from "next/image";
 import { ShoppingCart } from "lucide-react";
 import cafe_logo from "../../public/bite_brew_logo.jpeg";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
-import { logout } from "@/app/store/slices/authSlice";
+import { logout, type AuthUser } from "@/app/store/slices/authSlice";
 import { authApi } from "@/app/features/auth/api";
 import CartSidebar from "@/app/components/CartSidebar";
+
+const getDisplayName = (user: AuthUser | null): string => {
+  if (!user) return "Guest";
+  if (user.name?.trim()) return user.name.trim();
+  if (user.fullName?.trim()) return user.fullName.trim();
+  if (user.firstName || user.lastName) {
+    return [user.firstName?.trim(), user.lastName?.trim()].filter(Boolean).join(" ");
+  }
+  if (user.username?.trim()) return user.username.trim();
+  if (user.email?.trim()) return user.email.split("@")[0];
+  return "Guest";
+};
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -17,6 +29,7 @@ const Navbar = () => {
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   const cartItems = useAppSelector((state) => state.cart.items);
   const dispatch = useAppDispatch();
+  const displayName = useMemo(() => getDisplayName(user), [user]);
 
   const cartCount = useMemo(
     () => cartItems.reduce((total, item) => total + item.quantity, 0),
@@ -120,7 +133,7 @@ const Navbar = () => {
             {isAuthenticated ? (
               <div className="flex items-center gap-3">
                 <p className="text-xs font-semibold text-[#1a5a46] whitespace-nowrap">
-                  {greeting}, {user?.name ?? "Guest"}
+                  {greeting}, {displayName}
                 </p>
                 <button
                   type="button"
@@ -221,7 +234,7 @@ const Navbar = () => {
                 style={{ transitionDelay: `${navLinks.length * 100}ms` }}
                 className={`text-sm font-semibold text-[#8EC894] ${isMobileMenuOpen ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"} transition-all duration-500`}
               >
-                {greeting}, {user?.name ?? "Guest"}
+                {greeting}, {displayName}
               </p>
               <button
                 type="button"

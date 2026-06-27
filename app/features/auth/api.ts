@@ -86,28 +86,54 @@ const findStringByKeys = (obj: unknown, keys: string[]): string | null => {
   return null;
 };
 
+const normalizeName = (record: Record<string, unknown>): string | undefined => {
+  const rawName = typeof record.name === "string" ? record.name.trim() : undefined;
+  const fullName = typeof record.fullName === "string" ? record.fullName.trim() : undefined;
+  const firstName = typeof record.firstName === "string" ? record.firstName.trim() : typeof record.first_name === "string" ? record.first_name.trim() : undefined;
+  const lastName = typeof record.lastName === "string" ? record.lastName.trim() : typeof record.last_name === "string" ? record.last_name.trim() : undefined;
+  const username = typeof record.username === "string" ? record.username.trim() : undefined;
+
+  if (rawName) return rawName;
+  if (fullName) return fullName;
+  if (firstName || lastName) return [firstName, lastName].filter(Boolean).join(" ");
+  if (username) return username;
+  return undefined;
+};
+
 const findUser = (obj: unknown): AuthUser | null => {
   const record = asRecord(obj);
   if (!record) {
     return null;
   }
 
-  if (record.name || record.email || record.id) {
+  const name = normalizeName(record);
+  if (name || record.email || record.id) {
     return {
       id: typeof record.id === "string" ? record.id : undefined,
-      name: typeof record.name === "string" ? record.name : undefined,
+      name,
       email: typeof record.email === "string" ? record.email : undefined,
+      firstName: typeof record.firstName === "string" ? record.firstName : typeof record.first_name === "string" ? record.first_name : undefined,
+      lastName: typeof record.lastName === "string" ? record.lastName : typeof record.last_name === "string" ? record.last_name : undefined,
+      fullName: typeof record.fullName === "string" ? record.fullName : undefined,
+      username: typeof record.username === "string" ? record.username : undefined,
     };
   }
 
   const directUser = record.user ?? record.customer ?? record.data;
   const userRecord = asRecord(directUser);
-  if (userRecord && (userRecord.name || userRecord.email || userRecord.id)) {
-    return {
-      id: typeof userRecord.id === "string" ? userRecord.id : undefined,
-      name: typeof userRecord.name === "string" ? userRecord.name : undefined,
-      email: typeof userRecord.email === "string" ? userRecord.email : undefined,
-    };
+  if (userRecord) {
+    const resolvedName = normalizeName(userRecord);
+    if (resolvedName || userRecord.email || userRecord.id) {
+      return {
+        id: typeof userRecord.id === "string" ? userRecord.id : undefined,
+        name: resolvedName,
+        email: typeof userRecord.email === "string" ? userRecord.email : undefined,
+        firstName: typeof userRecord.firstName === "string" ? userRecord.firstName : typeof userRecord.first_name === "string" ? userRecord.first_name : undefined,
+        lastName: typeof userRecord.lastName === "string" ? userRecord.lastName : typeof userRecord.last_name === "string" ? userRecord.last_name : undefined,
+        fullName: typeof userRecord.fullName === "string" ? userRecord.fullName : undefined,
+        username: typeof userRecord.username === "string" ? userRecord.username : undefined,
+      };
+    }
   }
 
   for (const value of Object.values(record)) {

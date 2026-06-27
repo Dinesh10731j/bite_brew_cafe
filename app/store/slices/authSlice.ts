@@ -5,6 +5,10 @@ export type AuthUser = {
   id?: string;
   name?: string;
   email?: string;
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
+  username?: string;
 };
 
 type AuthState = {
