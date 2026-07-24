@@ -164,21 +164,28 @@ export default function MenuPage() {
               </div>
             )}
 
-            <div className="mt-20 flex justify-center items-center gap-4">
+            <div className="flex flex-wrap items-center justify-center gap-4 mt-16">
+              {/* Previous Icon Button */}
               <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                onClick={() => setPage(p => p - 1)}
-                className="p-4 rounded-2xl bg-white border border-black/5 disabled:opacity-30 hover:bg-[#0a2920] hover:text-white transition-all"
+                className="w-10 h-10 flex items-center justify-center bg-[#0a2920] text-white rounded-full disabled:opacity-30 hover:bg-[#207659] hover:scale-105 transition-all duration-300 cursor-pointer"
               >
-                <ChevronLeft size={20} />
+                <ChevronLeft size={18} />
               </button>
-              <span className="font-black italic text-2xl px-4 text-[#0a2920]">PAGE {page}</span>
+
+              {/* Current Page Number */}
+              <span className="w-10 h-10 flex items-center justify-center bg-[#0a2920] text-white rounded-full text-sm font-black shadow-lg">
+                {page}
+              </span>
+
+              {/* Next Icon Button */}
               <button
-                disabled={page >= (data?.pagination?.totalPages || 1)}
                 onClick={() => setPage(p => p + 1)}
-                className="p-4 rounded-2xl bg-white border border-black/5 disabled:opacity-30 hover:bg-[#0a2920] hover:text-white transition-all"
+                disabled={page >= (data?.pagination?.totalPages || 1)}
+                className="w-10 h-10 flex items-center justify-center bg-[#0a2920] text-white rounded-full disabled:opacity-30 hover:bg-[#207659] hover:scale-105 transition-all duration-300 cursor-pointer"
               >
-                <ChevronRight size={20} />
+                <ChevronRight size={18} />
               </button>
             </div>
           </>

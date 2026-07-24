@@ -88,6 +88,41 @@ const GallerySkeleton = () => (
   </div>
 );
 
+/**
+ * Generates a smart window of page numbers with ellipsis for large page counts.
+ * e.g. [1, "...", 4, 5, 6, "...", 10]
+ */
+function getPageNumbers(current: number, total: number): (number | "...")[] {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+
+  const pages: (number | "...")[] = [];
+
+  if (current <= 3) {
+    // Near the start: 1 2 3 4 ... last
+    for (let i = 1; i <= Math.min(4, total); i++) pages.push(i);
+    pages.push("...");
+    pages.push(total);
+  } else if (current >= total - 2) {
+    // Near the end: 1 ... total-3 total-2 total-1 total
+    pages.push(1);
+    pages.push("...");
+    for (let i = total - 3; i <= total; i++) pages.push(i);
+  } else {
+    // Middle: 1 ... current-1 current current+1 ... total
+    pages.push(1);
+    pages.push("...");
+    pages.push(current - 1);
+    pages.push(current);
+    pages.push(current + 1);
+    pages.push("...");
+    pages.push(total);
+  }
+
+  return pages;
+}
+
 export default function GalleryPage() {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -106,7 +141,7 @@ export default function GalleryPage() {
     try {
       const result = await fetchGalleryImages({
         page,
-        limit: 12,
+        limit: 4,
         category: category ?? undefined,
         featured,
       });
@@ -124,8 +159,13 @@ export default function GalleryPage() {
       if (featured !== undefined) {
         filtered = filtered.filter((img) => img.featured === featured);
       }
-      setImages(filtered);
-      setTotalPages(1);
+      // Simulate pagination for fallback data (4 items per page — matches API limit)
+      const fallbackLimit = 4;
+      const fallbackTotalPages = Math.max(1, Math.ceil(filtered.length / fallbackLimit));
+      const startIdx = (page - 1) * fallbackLimit;
+      const paginatedFallback = filtered.slice(startIdx, startIdx + fallbackLimit);
+      setImages(paginatedFallback);
+      setTotalPages(fallbackTotalPages);
       setTotal(filtered.length);
     } finally {
       setLoading(false);
@@ -266,48 +306,31 @@ export default function GalleryPage() {
             </div>
 
             {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-6 mt-16">
-                <button
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                  className="flex items-center gap-2 px-6 py-3 bg-white rounded-full text-sm font-black uppercase tracking-wider disabled:opacity-30 hover:bg-black/5 transition-all duration-300"
-                >
-                  <ChevronLeft size={16} />
-                  Previous
-                </button>
+            <div className="flex flex-wrap items-center justify-center gap-4 mt-16">
+              {/* Previous Icon Button */}
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="w-10 h-10 flex items-center justify-center bg-[#0a2920] text-white rounded-full disabled:opacity-30 hover:bg-[#207659] hover:scale-105 transition-all duration-300 cursor-pointer"
+              >
+                <ChevronLeft size={18} />
+              </button>
 
-                <div className="flex items-center gap-2">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                    <button
-                      key={p}
-                      onClick={() => setPage(p)}
-                      className={`w-10 h-10 rounded-full text-xs font-black transition-all duration-300 ${
-                        p === page
-                          ? "bg-[#0a2920] text-white"
-                          : "bg-white text-black/40 hover:bg-black/5"
-                      }`}
-                    >
-                      {p}
-                    </button>
-                  ))}
-                </div>
+              {/* Current Page Number */}
+              <span className="w-10 h-10 flex items-center justify-center bg-[#0a2920] text-white rounded-full text-sm font-black shadow-lg">
+                {page}
+              </span>
 
-                <button
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
-                  className="flex items-center gap-2 px-6 py-3 bg-white rounded-full text-sm font-black uppercase tracking-wider disabled:opacity-30 hover:bg-black/5 transition-all duration-300"
-                >
-                  Next
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-            )}
+              {/* Next Icon Button */}
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="w-10 h-10 flex items-center justify-center bg-[#0a2920] text-white rounded-full disabled:opacity-30 hover:bg-[#207659] hover:scale-105 transition-all duration-300 cursor-pointer"
+              >
+                <ChevronRight size={18} />
+              </button>
 
-            {/* Total count */}
-            <p className="text-center text-black/30 text-xs font-medium mt-6">
-              Showing {images.length} of {total} images
-            </p>
+            </div>
           </>
         )}
       </section>
