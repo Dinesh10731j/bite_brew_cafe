@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { CreativeHero } from '../sections/Hero';
 import CTA from '../sections/CTA';
-import { sampleTeam, type TeamMember } from '../types/team';
+import { type TeamMember } from '../types/team';
+import { fetchStaff } from '../features/team/api';
 import { gsap } from '../lib/gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { User, Heart, Zap, Coffee, Sparkles } from 'lucide-react';
+import { User, Heart, Sparkles } from 'lucide-react';
 import { useMouseTilt } from '../components/useMouseTilt';
 
 if (typeof window !== 'undefined') {
@@ -37,16 +38,27 @@ const FacebookIcon = ({ size = 18 }: { size?: number }) => (
 const TeamCard = ({ member }: { member: TeamMember }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   useMouseTilt({ ref: cardRef });
+  const [imageError, setImageError] = useState(false);
 
   return (
     <div ref={cardRef} className="team-item group perspective-1000">
       {/* Updated to Black Background with White/Teal Text */}
       <div className="relative bg-black rounded-[2.5rem] p-8 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.2)] hover:shadow-[0_40px_100px_rgba(26,90,70,0.3)] transition-all duration-500 will-change-transform hover:border-[#1A5A46]/50">
         
-        {/* Profile Image Placeholder / Graphic */}
+        {/* Profile Image */}
         <div className="w-full h-64 bg-neutral-900 rounded-3xl flex items-center justify-center mb-8 overflow-hidden relative border border-white/5">
           <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
-          <User size={80} className="text-[#1A5A46] group-hover:scale-110 transition-transform duration-700 ease-out opacity-80" />
+          
+          {member.image && !imageError ? (
+            <img 
+              src={member.image} 
+              alt={member.name}
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <User size={80} className="text-[#1A5A46] group-hover:scale-110 transition-transform duration-700 ease-out opacity-80" />
+          )}
           
           {/* Social Overlays */}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3 translate-y-12 group-hover:translate-y-0 transition-transform duration-500">
@@ -80,7 +92,7 @@ const TeamCard = ({ member }: { member: TeamMember }) => {
           
           <div className="pt-6 flex justify-center gap-4 border-t border-white/10">
              <div className="flex items-center gap-1 text-[10px] font-black uppercase text-[#1A5A46]">
-               <Heart size={12} fill="currentColor" /> {member.bio|| 'Master Artisan'}
+               <Heart size={12} fill="currentColor" /> {member.role || 'Master Artisan'}
              </div>
           </div>
         </div>
@@ -89,15 +101,70 @@ const TeamCard = ({ member }: { member: TeamMember }) => {
   );
 };
 
+// Skeleton component for loading state
+const TeamSkeleton = () => (
+  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
+    {Array.from({ length: 6 }).map((_, i) => (
+      <div key={i} className="animate-pulse">
+        <div className="relative bg-black/80 rounded-[2.5rem] p-8 border border-white/5">
+          {/* Profile Image Placeholder */}
+          <div className="w-full h-64 bg-neutral-800 rounded-3xl mb-8 overflow-hidden">
+            <div className="w-full h-full bg-neutral-700/50" />
+          </div>
+          <div className="space-y-3 text-center">
+            {/* Role Badge Placeholder */}
+            <div className="flex justify-center">
+              <div className="h-3 w-20 bg-neutral-700 rounded-full" />
+            </div>
+            {/* Name Placeholder */}
+            <div className="flex justify-center">
+              <div className="h-7 w-40 bg-neutral-700 rounded-lg" />
+            </div>
+            {/* Bio Lines Placeholder */}
+            <div className="space-y-2 pt-2">
+              <div className="h-3 w-full bg-neutral-700/60 rounded" />
+              <div className="h-3 w-3/4 bg-neutral-700/60 rounded mx-auto" />
+            </div>
+            {/* Footer Placeholder */}
+            <div className="pt-6 border-t border-white/5">
+              <div className="flex justify-center gap-4">
+                <div className="h-8 w-8 bg-neutral-700 rounded-xl" />
+                <div className="h-8 w-8 bg-neutral-700 rounded-xl" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
 const TeamPage = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState<'all' | 'Master Roaster' | 'Head Barista'>('all');
-
-  const filteredTeam = activeTab === 'all' 
-    ? sampleTeam 
-    : sampleTeam.filter(member => member.role === activeTab);
+  const [staff, setStaff] = useState<TeamMember[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const loadStaff = async () => {
+      try {
+        setLoading(true);
+        const data = await fetchStaff();
+        setStaff(data);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to load staff:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load team');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadStaff();
+  }, []);
+
+  useEffect(() => {
+    if (loading) return;
+
     const ctx = gsap.context(() => {
       gsap.fromTo(".team-item", 
         { opacity: 0, y: 30, scale: 0.9 },
@@ -133,7 +200,7 @@ const TeamPage = () => {
     }, containerRef);
 
     return () => ctx.revert();
-  }, [activeTab]);
+  }, [loading]);
 
   const interactiveTitle = (
     <span className="flex flex-wrap justify-start">
@@ -158,33 +225,15 @@ const TeamPage = () => {
       />
 
       <section id="team-grid" className="py-24 px-6 max-w-7xl mx-auto">
-        <div className="flex flex-wrap justify-center gap-4 mb-20">
-          {[
-            { id: 'all', label: 'The Whole Crew', icon: <Heart size={18}/> },
-            { id: 'Master Roaster', label: 'Roasters', icon: <Coffee size={18}/> },
-            { id: 'Head Barista', label: 'Baristas', icon: <Zap size={18}/> }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`
-                group relative flex items-center gap-3 px-8 py-4 rounded-2xl font-black uppercase text-sm tracking-widest transition-all duration-300
-                ${activeTab === tab.id 
-                  ? 'bg-black text-[#8EC894] shadow-[0_20px_40px_rgba(0,0,0,0.2)] -translate-y-1' 
-                  : 'bg-white text-black/40 hover:text-black hover:bg-white/80'}
-              `}
-            >
-              {tab.icon}
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
-          {filteredTeam.map((member) => (
-            <TeamCard key={member.id} member={member} />
-          ))}
-        </div>
+        {loading ? (
+          <TeamSkeleton />
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {staff.map((member) => (
+              <TeamCard key={member.id} member={member} />
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="px-6 pb-32">

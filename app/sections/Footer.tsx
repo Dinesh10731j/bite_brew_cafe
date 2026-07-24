@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, FormEvent } from 'react';
 import Link from 'next/link';
-import { MapPin, Clock, ArrowRight, ChevronUp } from 'lucide-react';
+import { MapPin, Clock, ArrowRight, ChevronUp, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { gsap } from '../lib/gsap';
+import { subscribeApi } from '../features/subscribe/api';
 
 // --- Brand Icons ---
 const InstagramIcon = () => (
@@ -29,7 +31,40 @@ const TwitterXIcon = () => (
 const Footer = () => {
   const footerRef = useRef<HTMLElement>(null);
   const brandRef = useRef<HTMLDivElement>(null);
+  const [email, setEmail] = useState('');
   const [isEmailFocused, setIsEmailFocused] = useState(false);
+  const [isSubscribing, setIsSubscribing] = useState(false);
+
+  const handleSubscribe = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const trimmedEmail = email.trim();
+
+    if (!trimmedEmail) {
+      toast.error('Please enter your email address.');
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      toast.error('Please enter a valid email address.');
+      return;
+    }
+
+    setIsSubscribing(true);
+    try {
+      const result = await subscribeApi.subscribe(trimmedEmail);
+      if (result.status === 201) {
+        toast.success('🎉 Welcome to the Roastery! Check your inbox for a welcome email.');
+      } else {
+        toast.success('You\'re already a member of the Roastery!');
+      }
+      setEmail('');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Something went wrong. Please try again.';
+      toast.error(message);
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -122,17 +157,30 @@ const Footer = () => {
               <p className="text-sm font-medium text-[#0a2920]/60">Get notified about limited edition beans and secret events.</p>
             </div>
             
-            <form className="flex-1 max-w-lg relative group">
+            <form onSubmit={handleSubscribe} className="flex-1 max-w-lg relative group">
               <div className={`relative flex items-center transition-all duration-500 border-b-2 ${isEmailFocused ? 'border-[#207659]' : 'border-black/10'}`}>
                 <input 
                   type="email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="your@email.com"
                   onFocus={() => setIsEmailFocused(true)}
                   onBlur={() => setIsEmailFocused(false)}
-                  className="bg-transparent w-full py-4 px-2 outline-none font-black text-xl placeholder:text-black/10 uppercase tracking-tighter"
+                  disabled={isSubscribing}
+                  className="bg-transparent w-full py-4 px-2 outline-none font-black text-xl placeholder:text-black/10 uppercase tracking-tighter disabled:opacity-50"
                 />
-                <button className="flex items-center gap-2 font-black uppercase tracking-widest text-[10px] group-hover:text-[#207659] transition-colors">
-                  Subscribe <ArrowRight size={16} />
+                <button 
+                  type="submit"
+                  disabled={isSubscribing}
+                  className="flex items-center gap-2 font-black uppercase tracking-widest text-[10px] group-hover:text-[#207659] transition-colors disabled:opacity-50"
+                >
+                  {isSubscribing ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <>
+                      Subscribe <ArrowRight size={16} />
+                    </>
+                  )}
                 </button>
               </div>
             </form>
@@ -146,7 +194,7 @@ const Footer = () => {
               <ChevronUp size={20} />
             </button>
             <p className="text-[10px] font-black uppercase tracking-[0.4em] text-black/30">
-              © 2026 Java Brew & Bite • Design by <a href='https://codynexnepal.netlify.app/' className="hover:text-[#207659] transition-colors">CodyneX</a>
+              © {new Date().getFullYear()} Bite And Brew • Design by <a href='https://codynexnepal.netlify.app/' className="hover:text-[#207659] transition-colors">CodyneX</a>
             </p>
           </div>
           

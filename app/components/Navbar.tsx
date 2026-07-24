@@ -72,6 +72,7 @@ const Navbar = () => {
     { name: "Gallery", href: "/gallery" },
   ];
 
+
   const handleLogout = async () => {
     try {
       await authApi.logout();

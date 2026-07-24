@@ -9,4 +9,7 @@ export const ApiEndpoints = {
   listMenus: `${BASE_PATH}/menu/items`,
   orderMenus: `${BASE_PATH}/orders`,  
   logout: `${BASE_PATH}/auth/logout`,
+  listStaff: `${BASE_PATH}/staff`,
+  listGallery: `${BASE_PATH}/gallery`,
+  subscribe: `${BASE_PATH}/newsletter/subscribe`,
 };
