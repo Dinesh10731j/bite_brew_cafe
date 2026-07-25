@@ -70,6 +70,7 @@ const Navbar = () => {
     { name: "Menu", href: "/menu" },
     { name: "Team", href: "/team" },
     { name: "Gallery", href: "/gallery" },
+    { name: "Rewards", href: "/loyalty" },
   ];
 
 

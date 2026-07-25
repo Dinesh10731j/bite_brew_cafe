@@ -12,4 +12,13 @@ export const ApiEndpoints = {
   listStaff: `${BASE_PATH}/staff`,
   listGallery: `${BASE_PATH}/gallery`,
   subscribe: `${BASE_PATH}/newsletter/subscribe`,
+
+  // Loyalty System
+  loyaltyDashboard: `${BASE_PATH}/loyalty/dashboard`,
+  loyaltyCatalog: `${BASE_PATH}/loyalty/catalog`,
+  loyaltyWallet: `${BASE_PATH}/loyalty/wallet`,
+  loyaltyRedeem: `${BASE_PATH}/loyalty/redeem`,
+  loyaltyCheckIn: `${BASE_PATH}/loyalty/check-in`,
+  loyaltyReferral: `${BASE_PATH}/loyalty/referral`,
+  loyaltyHistory: `${BASE_PATH}/loyalty/history`,
 };
