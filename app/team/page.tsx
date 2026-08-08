@@ -219,7 +219,7 @@ const TeamPage = () => {
     <div className="bg-[#F5F0E6] min-h-screen" ref={containerRef}>
       <CreativeHero
         tagline="Meet the Artisans"
-        title={interactiveTitle as any}
+title={interactiveTitle}
         description="The passionate souls crafting your daily ritual with precision, heart, and a touch of revolution."
         ctas={[{ href: '#team-grid', text: 'Meet The Team' }]}
       />

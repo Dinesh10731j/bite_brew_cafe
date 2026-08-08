@@ -14,8 +14,17 @@ import {
   Send,
 } from "lucide-react";
 import CTA from '../sections/CTA';
+import type { LucideIcon } from "lucide-react";
 
-const ContactItem = ({ item }: { item: any }) => {
+type ContactCardData = {
+  id: number;
+  title: string;
+  desc: string;
+  icon: LucideIcon;
+  category: string;
+};
+
+const ContactItem = ({ item }: { item: ContactCardData }) => {
   const itemRef = useRef<HTMLDivElement>(null);
   useMouseTilt({ ref: itemRef });
 
@@ -57,7 +66,7 @@ const ContactItem = ({ item }: { item: any }) => {
 };
 
 export default function ContactPage() {
-  const contactItems = [
+const contactItems: ContactCardData[] = [
     { id: 1, title: 'Lambagar, Nepal', desc: 'Visit our Roastery', icon: MapPin, category: 'Location' },
     { id: 2, title: '+977 98XXXXXXXX', desc: 'Call or WhatsApp', icon: Phone, category: 'Mobile' },
     { id: 3, title: 'hello@bitebrew.com', desc: 'Drop an email', icon: Mail, category: 'Email' },
@@ -117,9 +126,9 @@ export default function ContactPage() {
 
   return (
     <main className="bg-[#F5F0E6] min-h-screen overflow-x-hidden" ref={containerRef}>
-      <CreativeHero
+<CreativeHero
         tagline="Connect With Us"
-        title={interactiveTitle as any}
+        title={interactiveTitle}
         description="Ready to brew something amazing together? Whether it's collaborations, events, or your next caffeine fix, we're here."
         ctas={[{ href: '#connect', text: 'Get In Touch' }]}
       />

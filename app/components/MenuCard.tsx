@@ -2,13 +2,14 @@ import { useRef } from "react";
 import { ShoppingBag } from "lucide-react";
 import { useMouseTilt } from "./useMouseTilt";
 import Image from "next/image";
+import type { MenuItem } from "@/app/features/menu/api";
 
 export const MenuItemCard = ({
   item,
   onAdd,
 }: {
-  item: any;
-  onAdd: (item: any) => void;
+  item: MenuItem;
+  onAdd: (item: MenuItem) => void;
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   useMouseTilt({ ref: cardRef });

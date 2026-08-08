@@ -240,7 +240,7 @@ export default function GalleryPage() {
     <main className="bg-[#F5F0E6] min-h-screen overflow-x-hidden" ref={containerRef}>
       <CreativeHero
         tagline="Visual Journal"
-        title={interactiveTitle as any}
+title={interactiveTitle}
         description="A curated collection of captured moments, from the first pour to the late night grinds."
         ctas={[{ href: '#pins', text: 'View Pins' }]}
       />

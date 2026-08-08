@@ -4,7 +4,7 @@
 
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { Award, ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -18,12 +18,14 @@ export default function LoyaltyPage() {
   const router = useRouter();
   const { isAuthenticated, loading } = useAppSelector((state) => state.auth);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [mounted, setMounted] = useState(false);
 
-  // Ensure consistent SSR vs client render to prevent hydration mismatch
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // Detect client-side mount without triggering a setState-in-effect warning.
+  // Returns false during SSR/hydration and true on the client after hydration.
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   // Redirect unauthenticated users to login
   useEffect(() => {
@@ -114,7 +116,7 @@ export default function LoyaltyPage() {
       {/* Hero Section */}
       <CreativeHero
         tagline="Loyalty Rewards"
-        title={interactiveTitle as any}
+        title={interactiveTitle}
         description="Earn points with every visit, unlock exclusive rewards, and enjoy the Bite & Brew experience like never before."
         ctas={[
           { href: "#dashboard", text: "View Dashboard" },

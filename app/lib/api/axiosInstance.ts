@@ -38,3 +38,33 @@ axiosInstance.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// ─────────────────────────────────────────────────────────────
+// AI Menu Recommendation Service axios instance
+// Points to the AI microservice (default deployed on Render)
+// ─────────────────────────────────────────────────────────────
+const resolveAiBaseUrl = (): string => {
+  const configured =
+    process.env.NEXT_PUBLIC_AI_RECOMMEND_URL ??
+    process.env.NEXT_PUBLIC_AI_BASE_URL ??
+    "https://bite-brew-menu-recommendation-system.onrender.com";
+  return configured.replace(/\/+$/, "").replace(/\/api\/v1$/, "");
+};
+
+const aiBaseURL = resolveAiBaseUrl();
+
+export const recommendationAxiosInstance = axios.create({
+  baseURL: aiBaseURL,
+  withCredentials: false,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+recommendationAxiosInstance.interceptors.request.use((config) => {
+  const apiKey = process.env.NEXT_PUBLIC_AI_API_KEY;
+  if (apiKey) {
+    config.headers["X-API-Key"] = apiKey;
+  }
+  return config;
+});

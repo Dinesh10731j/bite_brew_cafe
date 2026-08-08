@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Minus, Plus, ShoppingBag, Trash2, X, MapPin, User, Mail, Phone } from "lucide-react";
 import { createOrder, type CreateOrderPayload } from "@/app/features/order/api";
@@ -40,6 +40,20 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [checkoutSuccess, setCheckoutSuccess] = useState<string | null>(null);
 
+  // Seed the checkout form from the logged-in user when it changes.
+  // Uses render-time adjustment (not an effect) to avoid setState-in-effect warnings.
+  const [prevUser, setPrevUser] = useState(user);
+  if (user !== prevUser) {
+    setPrevUser(user);
+    if (isAuthenticated && user) {
+      setCheckoutForm(prev => ({
+        ...prev,
+        customerName: user.name || "",
+        email: user.email || ""
+      }));
+    }
+  }
+
   const itemCount = useMemo(
     () => cart.items.reduce((total, item) => total + item.quantity, 0),
     [cart.items]
@@ -56,22 +70,12 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
         onClose();
       }, 3000);
     },
-    onError: (error: any) => {
+onError: (error: Error) => {
       setCheckoutError(error.message || "Something went wrong.");
     },
   });
 
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      setCheckoutForm(prev => ({
-        ...prev,
-        customerName: user.name || "",
-        email: user.email || ""
-      }));
-    }
-  }, [isAuthenticated, user]);
-
-  const handleCheckoutSubmit = (e: FormEvent) => {
+const handleCheckoutSubmit = (e: FormEvent) => {
     e.preventDefault();
     setCheckoutError(null);
 
@@ -196,7 +200,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                     />
                     <select
                       value={checkoutForm.orderType}
-                      onChange={(e) => setCheckoutForm(p => ({ ...p, orderType: e.target.value as any }))}
+onChange={(e) => setCheckoutForm(p => ({ ...p, orderType: e.target.value as CheckoutFormState["orderType"] }))}
                       className="bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-sm focus:border-white/40 outline-none"
                     >
                       <option value="DINE_IN" className="bg-black text-white">DINE IN</option>
@@ -228,7 +232,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
 
                   <select
                     value={checkoutForm.paymentMethod}
-                    onChange={(e) => setCheckoutForm(p => ({ ...p, paymentMethod: e.target.value as any }))}
+onChange={(e) => setCheckoutForm(p => ({ ...p, paymentMethod: e.target.value as CheckoutFormState["paymentMethod"] }))}
                     className="bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-sm"
                   >
                     <option value="cash" className="bg-black">CASH</option>

@@ -22,3 +22,16 @@ export const ApiEndpoints = {
   loyaltyReferral: `${BASE_PATH}/loyalty/referral`,
   loyaltyHistory: `${BASE_PATH}/loyalty/history`,
 };
+
+// ─────────────────────────────────────────────────────────────
+// AI Menu Recommendation Service (separate microservice)
+// Base: http://localhost:8000/api/v1
+// ─────────────────────────────────────────────────────────────
+const AI_RECOMMEND_PATH = "/api/v1";
+
+export const AiRecommendationEndpoints = {
+  recommend: `${AI_RECOMMEND_PATH}/recommend`,
+  captureEvent: (userId: string) => `${AI_RECOMMEND_PATH}/users/${userId}/events`,
+  recordOrder: (userId: string) => `${AI_RECOMMEND_PATH}/users/${userId}/orders`,
+  personalizedRecommendations: (userId: string) => `${AI_RECOMMEND_PATH}/users/${userId}/recommendations`,
+};

@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Search, Filter, ShoppingBag } from "lucide-react";
 import { gsap } from "../lib/gsap"; 
-import { fetchMenus } from "@/app/features/menu/api";
+import { fetchMenus, type MenuItem } from "@/app/features/menu/api";
 import { useAppDispatch } from "@/app/store/hooks";
 import { addItem } from "@/app/store/slices/cartSlice";
 import { CreativeHero } from "../sections/Hero";
@@ -13,6 +13,7 @@ import { CreativeHero } from "../sections/Hero";
 
 
 import { MenuItemCard } from "../components/MenuCard";
+import { AiRecommendation } from "../components/AiRecommendation";
 
 export default function MenuPage() {
   const dispatch = useAppDispatch();
@@ -39,7 +40,7 @@ export default function MenuPage() {
   const categoryOptions = useMemo(() => {
     const categoryMap = new Map<string, string>();
     // Look through current items and extract unique category pairs
-    (data?.data ?? []).forEach((item: any) => {
+(data?.data ?? []).forEach((item: MenuItem) => {
       if (item.category?.id && item.category?.name) {
         categoryMap.set(item.category.id, item.category.name);
       }
@@ -80,23 +81,25 @@ export default function MenuPage() {
     </span>
   );
 
-  const handleAddToCart = (item: any) => {
-    dispatch(addItem({ menuItemId: item.id, quantity: 1, name: item.name, price: Number(item.price), image: item.image }));
+  const handleAddToCart = (item: { id: string | number; name: string; price: number | string; image?: string | null }) => {
+    dispatch(addItem({ menuItemId: String(item.id), quantity: 1, name: item.name, price: Number(item.price), image: item.image ?? null }));
   };
 
   return (
     <main className="bg-[#F5F0E6] min-h-screen" ref={containerRef}>
-      <CreativeHero
+<CreativeHero
         tagline="Freshly Brewed"
-        title={interactiveTitle as any}
+        title={interactiveTitle}
         description="From single-origin pours to artisanal snacks, explore our daily offerings."
         ctas={[{ href: "#items", text: "Explore Menu" }]}
       />
 
+      <AiRecommendation onAdd={handleAddToCart} />
+
       <section id="items" className="max-w-7xl mx-auto px-6 py-20">
         <div className="flex flex-col md:flex-row gap-4 mb-12 items-center justify-between">
           <div className="relative w-full md:w-96">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-black/30" size={18} />
+<Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#0a2920]/40" size={18} />
             <input
               type="text"
               placeholder="What are you craving?"
@@ -105,7 +108,7 @@ export default function MenuPage() {
                 setSearch(e.target.value);
                 setPage(1); // Reset to page 1 on search
               }}
-              className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white border border-black/5 focus:ring-2 ring-[#207659]/20 transition-all outline-none font-medium"
+              className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white border border-black/5 text-[#0a2920] placeholder:text-[#0a2920]/40 focus:ring-2 ring-[#207659]/20 transition-all outline-none font-medium"
             />
           </div>
 
@@ -153,7 +156,7 @@ export default function MenuPage() {
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {data?.data?.map((item: any) => (
+{data?.data?.map((item: MenuItem) => (
                 <MenuItemCard key={item.id} item={item} onAdd={handleAddToCart} />
               ))}
             </div>

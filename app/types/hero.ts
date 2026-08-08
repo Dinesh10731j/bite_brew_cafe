@@ -2,6 +2,8 @@
  * Premium Hero Types - Cinematic scroll-driven experience
  */
 
+import type { ReactNode } from "react";
+
 export interface CTAButton {
   text: string
   href: string
@@ -9,8 +11,8 @@ export interface CTAButton {
 }
 
 export interface HeroProps {
-  /** Main brand title */
-  title: string
+/** Main brand title */
+  title: ReactNode
   /** Engaging tagline */
   tagline: string
   /** Descriptive subtitle */
