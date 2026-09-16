@@ -248,7 +248,7 @@ title={interactiveTitle}
                 CRAFT <br/><span className="text-[#8EC894]">OVER</span> <br/>COMFORT.
               </h2>
               <p className="text-white/60 text-xl max-w-md mb-10 leading-relaxed">
-                "Our mission isn't just to serve coffee; it's to honor the hands that grew the beans and the people who drink the brew."
+                &ldquo;Our mission isn&apos;t just to serve coffee; it&apos;s to honor the hands that grew the beans and the people who drink the brew.&rdquo;
               </p>
               <div className="flex gap-4">
                 <div className="text-white">

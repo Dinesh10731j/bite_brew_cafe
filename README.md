@@ -134,7 +134,12 @@ Create a `.env.local` file for environment-specific settings:
 ```env
 NEXT_PUBLIC_SITE_URL=https://bitebrew.com
 NEXT_PUBLIC_ANALYTICS_ID=your-analytics-id
+NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=your-google-verification-token
 ```
+
+Set `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` in Netlify using the value from Google
+Search Console, then redeploy. Next.js will emit the required
+`google-site-verification` meta tag on every page.
 
 ### GSAP Setup
 GSAP plugins are registered in `app/lib/gsap.ts`. Add additional plugins here as needed.
